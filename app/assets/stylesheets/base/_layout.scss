@@ -127,8 +127,37 @@
 }
 
 // Main content container
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%; 
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 .main-content {
+  flex: 1;
   padding: $spacer * 2;
-  min-height: calc(100vh - 120px); // Adjust based on your navbar height
+}
+
+.footer {
+  background-color: #f2f2f2;
+  text-align: center;
+  padding: 1rem;
+  color: #555;
+
+  a {
+    color: #555;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 

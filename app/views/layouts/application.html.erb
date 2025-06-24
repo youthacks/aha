@@ -7,40 +7,40 @@
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <%= stylesheet_link_tag 'application', media: 'all'%>
+    <%= stylesheet_link_tag 'application', media: 'all' %>
     <%= javascript_include_tag 'application' %>
-
+    <%= javascript_importmap_tags %>
 
     <%= yield :head %>
-
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
-
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
-
-    <%= javascript_importmap_tags %>
-    
   </head>
 
-  <body>
-  	<%= render 'shared/navbar' %>
-    <% if session[:admin_id].present? and defined?(params[:event_slug]) && Event.friendly.exists?(slug: params[:event_slug]) %>
+  <!-- Flex container with .page-wrapper -->
+  <body class="page-wrapper">
+    <%= render 'shared/navbar' %>
+    <% if session[:admin_id].present? && defined?(params[:event_slug]) && Event.friendly.exists?(slug: params[:event_slug]) %>
       <%= render 'shared/event_navbar' %>
     <% end %>
 
     <% if flash[:notice] %>
-  <div style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
-    <%= flash[:notice] %>
-  </div>
-<% end %>
+      <div style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+        <%= flash[:notice] %>
+      </div>
+    <% end %>
 
-<% if flash[:alert] %>
-  <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
-    <%= flash[:alert] %>
-  </div>
-<% end %>
-    <%= yield %>
+    <% if flash[:alert] %>
+      <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 10px;">
+        <%= flash[:alert] %>
+      </div>
+    <% end %>
+
+    <!-- Main content expands to push footer down -->
+    <main class="main-content">
+      <%= yield %>
+    </main>
+
+    <footer class="footer">
+      <p>© 2025 Youthacks</p>
+      <a href="https://youthacks.org" target="_blank">youthacks.org</a>
+    </footer>
   </body>
 </html>
