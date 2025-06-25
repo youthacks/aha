@@ -33,6 +33,7 @@ if [ "$LOCAL_HASH" != "$REMOTE_HASH" ] || ! docker ps -q -f name=mattsoh_aha | g
 	#   echo "[$(date '+%Y-%m-%d %H:%M:%S')] Killing process $PID occupying port 3836"
 	#   kill -9 $PID || true
 	# fi
+	docker builder prune 
 
 	echo "[$(date '+%Y-%m-%d %H:%M:%S')] Cleanup done, proceeding to build and run Docker container..."
 
