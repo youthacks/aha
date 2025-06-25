@@ -11,7 +11,6 @@ Rails.application.configure do
 
   # Show full error reports.
   config.consider_all_requests_local = true
-  config.assets.css_compressor = :yui
   config.assets.js_compressor = :terser
 
   # Enable server timing.
