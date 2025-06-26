@@ -3,6 +3,7 @@ class HomeController < ApplicationController
 	before_action :require_event, only: [:products, :products_refresh]
 	def index
 		@admin = Admin.find_by(id: session[:admin_id]) # Check if an admin is logged in
+        redirect_to dashboard_path if @admin
 	end
 	def products
 		@products = @event.products.active

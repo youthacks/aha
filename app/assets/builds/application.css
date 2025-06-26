@@ -1790,6 +1790,21 @@ textarea.form-control {
 .events-container {
   padding: 2rem 0;
 }
+.events-container .dashboard-stats ul.event-list,
+.events-container .dashboard-stats ol.event-list {
+  list-style: none !important;
+  margin: 0;
+  padding: 0;
+}
+.events-container .dashboard-stats ul.event-list li ::marker,
+.events-container .dashboard-stats ol.event-list li ::marker {
+  content: "";
+}
+.events-container .dashboard-stats .event-list li {
+  /* Also ensure each list item has no list-style */
+  list-style: none !important;
+  /* Additional styling */
+}
 .events-container .event-card {
   background-color: #ffffff;
   border-radius: 0.25rem;

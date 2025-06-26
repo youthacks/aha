@@ -2,6 +2,27 @@
 .events-container {
   padding: $spacer * 2 0;
 
+  .dashboard-stats {
+    ul.event-list,
+    ol.event-list {
+      list-style: none !important;
+      margin: 0;
+      padding: 0;
+
+      li {
+        ::marker {
+          content: "";
+        }
+      }
+    }
+
+    .event-list li {
+      /* Also ensure each list item has no list-style */
+      list-style: none !important;
+      /* Additional styling */
+    }
+  }
+
   .event-card {
     @include card;
     margin-bottom: $spacer * 2;
@@ -93,7 +114,7 @@
       align-items: center;
     }
   }
-
+  
   // Event details page
   .event-detail {
     margin-bottom: $spacer * 3;
