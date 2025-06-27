@@ -6,6 +6,7 @@
 
   <div class="dashboard-stats">
     <% if @admin.managed_events.any? %>
+    <div class="event-list-container">
       <h3 class="subheading">Managed Events</h3>
       <ul class="event-list managed">
         <% @admin.managed_events.each do |event| %>
@@ -16,9 +17,11 @@
           </li>
         <% end %>
       </ul>
+    </div>
     <% end %>
 
     <% if @admin.events.any? %>
+    <div class="event-list-container">
       <h3 class="subheading">Admin</h3>
       <ul class="event-list participated">
         <% @admin.events.each do |event| %>
@@ -29,6 +32,7 @@
           </li>
         <% end %>
       </ul>
+    </div>
     <% end %>
   </div>
 </div>

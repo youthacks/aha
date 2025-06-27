@@ -3,6 +3,7 @@
   padding: $spacer * 2 0;
 
   .dashboard-stats {
+    flex-direction: column;
     ul.event-list,
     ol.event-list {
       list-style: none !important;
