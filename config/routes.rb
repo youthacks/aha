@@ -31,6 +31,9 @@ Rails.application.routes.draw do
 
 	get "dashboard", to: "admins#dashboard", as: "dashboard"
 	get "settings",  to: "admins#settings",  as: "settings"
+	post "settings/change_email", to: "admins#change_email", as: "change_email"
+
+	get
 
 	get "pending_invitations", to: "admins#pending_invitations", as: "pending_invitations"
 	post "accept_invitation/:id", to: "admins#accept_invitation", as: "accept_invitation"

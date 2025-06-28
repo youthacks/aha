@@ -8,7 +8,7 @@ class ManagersController < EventsController
         begin
             admin = Admin.find_by(name: params[:name])
             unless admin.present? and admin.id != @event.manager_id && !@event.admins.exists?(admin.id)
-                raise "Invalid admin ID or admin already exists for this event."
+                raise "Invalid admin username or admin already exists for this event."
             end
             result = AdminInvitation.create!(event_id: @event.id, admin_id: admin.id)
             if result[:success]

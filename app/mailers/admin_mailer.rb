@@ -10,4 +10,9 @@ class AdminMailer < ApplicationMailer
         @manager = event.manager.name
         mail(to: admin.email, subject: "Invitation to Administer Event: #{@event}")
     end
+
+    def send_change_email(email, link)
+        @link = link
+        mail(to: email, subject: 'Change Your Email for Aha!')
+    end
 end

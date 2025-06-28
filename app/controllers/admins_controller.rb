@@ -127,7 +127,29 @@ class AdminsController < ApplicationController
         end
     end
 
+    def change_email
+        new_email = params[:email].strip.downcase
+        if new_email.present? && new_email != @admin.email
+            if Admin.exists?(email: new_email)
+                redirect_to settings_path, alert: "Email already exists. Try another one."
+            else
+                token = JWT.encode({
+                    admin_id: @admin.id,
+                    new_email: new_email,
+                    exp: 1.hour.from_now.to_i
+                }, Rails.application.secret_key_base)
+                link = root_url + "settings/change_email/confirm?token=#{token}"
+                AdminMailer.send_change_email(new_email, link).deliver_now
+                redirect_to settings_path, notice: 'Email was successfully updated.'
+            end
+        else
+            redirect_to settings_path, alert: 'Please enter a valid email.'
+        end
+
+    end
+
     def new_event
+
     end
 
     def create_event
