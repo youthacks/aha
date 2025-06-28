@@ -8,7 +8,7 @@
     <% if @admin.managed_events.any? %>
     <div class="event-list-container">
       <h3 class="subheading">Managed Events</h3>
-      <ul class="event-list managed">
+      <ul class="event-list managed sortable-list">
         <% @admin.managed_events.each do |event| %>
           <li class="event-card stat-card">
             <%= link_to event.name, event_dashboard_path(event.slug) %> - <%= event.date.strftime("%-d %b, %Y") %>
@@ -23,7 +23,7 @@
     <% if @admin.events.any? %>
     <div class="event-list-container">
       <h3 class="subheading">Admin</h3>
-      <ul class="event-list participated">
+      <ul class="event-list participated sortable-list">
         <% @admin.events.each do |event| %>
           <li class="event-card stat-card">
             <%= link_to event.name, event_dashboard_path(event.slug) %> - <%= event.date.strftime("%-d %b, %Y") %>
@@ -36,3 +36,14 @@
     <% end %>
   </div>
 </div>
+
+<script type="module">
+  import Sortable from "sortablejs";
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const lists = document.getElementsByClassName('sortable-list');
+    Array.from(lists).forEach(function(item) {
+      Sortable.create(item, { animation: 1000 });
+    });
+  });
+</script>

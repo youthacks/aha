@@ -1,10 +1,9 @@
-<nav style="background-color: #333; padding: 1em;">
-  <ul style="list-style: none; display: flex; gap: 1em; margin: 0; padding: 0;">
-    
-    <li><%= link_to "Participants", event_dashboard_path, style: "color: white; text-decoration: none;" %></li>
-    <li><%= link_to "Products", event_products_path, style: "color: white; text-decoration: none;" %></li>
-    <li><%= link_to "Transaction History", event_transactions_path, style: "color: white; text-decoration: none;" %></li>
-    <li><%= link_to "Activity History", event_activity_path, style: "color: white; text-decoration: none;" %></li>
+<nav class="navbar">
+  <ul class="navbar-list">
+    <li><%= link_to "Participants", event_dashboard_path, class: "navbar-link" %></li>
+    <li><%= link_to "Products", event_products_path, class: "navbar-link" %></li>
+    <li><%= link_to "Transaction History", event_transactions_path, class: "navbar-link" %></li>
+    <li><%= link_to "Activity History", event_activity_path, class: "navbar-link" %></li>
     <li><%= link_to "Admins", event_admins_path, style: "color: white; text-decoration: none;" %></li>
     <li><%= link_to "Settings", event_settings_path, style: "color: white; text-decoration: none;" %></li>
 

@@ -120,12 +120,12 @@ module Api
             tags ['Event Managers']
             headers AUTH_HEADER_DOC
             success nil
-            failure [[422, 'Invalid admin ID or admin already exists', Api::Entities::Error], [403, 'Unauthorized access', Api::Entities::Error]]
+            failure [[422, 'Invalid admin username or admin already exists', Api::Entities::Error], [403, 'Unauthorized access', Api::Entities::Error]]
             end
             post :invite_admin do
                 admin = Admin.find_by(name: params[:name])
                 unless admin.present? && admin.id != @event.manager_id && !@event.admins.exists?(admin.id)
-                    error!({ message: 'Invalid admin ID or admin already exists for this event.' }, 422)
+                    error!({ message: 'Invalid admin username or admin already exists for this event.' }, 422)
                 end
                 result = AdminInvitation.create!(event_id: @event.id, admin_id: admin.id)
                 if result[:success]

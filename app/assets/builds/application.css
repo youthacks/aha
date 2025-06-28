@@ -1155,13 +1155,13 @@ textarea.form-control {
 /* Navbar styling */
 .navbar {
   background-color: #2c3e50;
-  padding: 1rem;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  padding: 0.75rem;
 }
 .navbar ul {
   list-style: none;
   display: flex;
-  gap: 1rem;
+  gap: 1em;
   margin: 0;
   padding: 0;
 }
@@ -1234,45 +1234,66 @@ textarea.form-control {
   color: #4a6baf;
 }
 
-.admin-dropdown {
+.navbar-item {
   display: inline-block;
   position: relative;
   color: #ffffff;
   cursor: pointer;
 }
-.admin-dropdown span {
+.navbar-item span {
   padding: 0.5rem;
   border-radius: 0.25rem;
   transition: all 0.2s ease-in-out;
 }
-.admin-dropdown span:hover {
+.navbar-item span:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.admin-dropdown {
+  position: relative;
+}
+.admin-dropdown .admin-dropdown-toggle {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  background: none;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+.admin-dropdown .admin-dropdown-toggle:hover, .admin-dropdown .admin-dropdown-toggle:focus {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #34be82;
 }
 .admin-dropdown .admin-dropdown-menu {
   display: none;
   position: absolute;
   right: 0;
+  top: 100%;
   background: #2c3e50;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0.5rem 0;
   min-width: 180px;
   border-radius: 0.25rem;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   z-index: 1000;
 }
-.admin-dropdown .admin-dropdown-menu li a {
+.admin-dropdown .admin-dropdown-menu li a.dropdown-link {
   display: block;
   padding: 0.5rem 1rem;
   color: #ffffff;
   text-decoration: none;
+  font-weight: 400;
+  border-radius: 0.125rem;
   transition: all 0.2s ease-in-out;
 }
-.admin-dropdown .admin-dropdown-menu li a:hover, .admin-dropdown .admin-dropdown-menu li a:focus {
-  background-color: rgba(255, 255, 255, 0.1);
+.admin-dropdown .admin-dropdown-menu li a.dropdown-link:hover, .admin-dropdown .admin-dropdown-menu li a.dropdown-link:focus {
+  background-color: rgba(255, 255, 255, 0.12);
   color: #34be82;
 }
-.admin-dropdown:hover .admin-dropdown-menu {
+.admin-dropdown:hover .admin-dropdown-menu, .admin-dropdown:focus-within .admin-dropdown-menu {
   display: block;
 }
 
