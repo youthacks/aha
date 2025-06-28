@@ -33,7 +33,7 @@ Rails.application.routes.draw do
 	get "settings",  to: "admins#settings",  as: "settings"
 	post "settings/change_email", to: "admins#change_email", as: "change_email"
 
-	get
+	get "settings/change_email/confirm", to: "admins#change_email_confirm", as: "change_email_confirm"
 
 	get "pending_invitations", to: "admins#pending_invitations", as: "pending_invitations"
 	post "accept_invitation/:id", to: "admins#accept_invitation", as: "accept_invitation"

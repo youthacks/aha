@@ -5,7 +5,7 @@
 	<%= text_field_tag :name, nil, required: true %>
 	<br><br>
 	<%= label_tag :date, "Event Date" %>
-	<%= date_field_tag :date, nil, required: true %>
+	<%= date_field_tag :date, Date.today, required: true %>
 	(I'm sorry, we tried to change the date format to the actual correct one!)
 	<br><br>
 	<%= label_tag :description, "Event Description (optional)" %>

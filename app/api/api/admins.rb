@@ -14,8 +14,8 @@ module Api
 
 	helpers do
 		def require_admin!
-			header = headers['Authorization']
-			token = header&.split(' ')&.last
+				header = headers['Authorization']
+				token = header&.split(' ')&.last
 
 			error!({ message: 'Missing token' }, 401) if token.blank?
 
@@ -283,6 +283,69 @@ module Api
     get :settings do	
       present @admin, with: Api::Entities::Admin::Full
     end
+
+	desc 'Change admin email' do
+		summary 'Change admin email'
+		detail 'Sends a confirmation email to the new address with a link to confirm the change'
+		tags ['User']
+		headers AUTH_HEADER_DOC
+		success code: 200, message: "Confirmation email sent"
+		failure [[401, 'Unauthorized', Api::Entities::Error], [422, 'Invalid email', Api::Entities::Error]]
+	end
+	params do
+		use :email_param
+	end
+	post :change_email do
+		new_email = params[:email].strip
+		if new_email.present? && new_email =~ URI::MailTo::EMAIL_REGEXP
+			if @admin.email == new_email
+				error!({ code: 422, message: 'New email cannot be the same as the current email' }, 422)
+			else
+				exp = 1.hour.from_now
+				token = JWT.encode({
+					admin_id: @admin.id,
+					new_email: new_email,
+					exp: exp.to_i
+				}, Rails.application.secret_key_base)
+				AdminMailer.send_change_email(new_email, request.base_url + "/settings/change_email/confirm?token=#{token}").deliver_now
+				{message: 'Confirmation email sent'}
+			end
+		else
+			error!({ message: 'Please enter a valid email.' }, 422)
+		end
+	end
+	
+	desc 'Confirm email change' do
+		summary 'Confirm email change'
+		detail 'Confirms the email change using a token sent to the new email address'
+		tags ['User']
+		headers AUTH_HEADER_DOC
+		success Api::Entities::Admin::Full
+		failure [[401, 'Unauthorized', Api::Entities::Error], [422, 'Invalid token or email', Api::Entities::Error]]
+	end
+
+	params do
+		requires :token, type: String, documentation: { type: 'string', desc: 'Confirmation token for email change' }
+	end
+	get 'change_email/confirm' do
+		token = params[:token]
+		begin
+			decoded = JWT.decode(token, Rails.application.secret_key_base)[0]
+			admin = Admin.find(decoded['admin_id'])
+			new_email = decoded['new_email']
+			if admin.email == new_email
+				error!({ message: 'New email cannot be the same as the current email' }, 422)
+			else
+				admin.update!(email: new_email)
+				present admin, with: Api::Entities::Admin::Full
+				error!({ message: 'Invalid token or email' }, 422)
+			end			
+		rescue JWT::DecodeError
+			error!({ message: 'Invalid token' }, 401)
+		rescue ActiveRecord::RecordNotFound
+			error!({ message: 'Admin not found' }, 401)
+		end
+	end
 
     desc 'Login' do
       summary 'Admin login'

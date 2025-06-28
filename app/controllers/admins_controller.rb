@@ -140,12 +140,37 @@ class AdminsController < ApplicationController
                 }, Rails.application.secret_key_base)
                 link = root_url + "settings/change_email/confirm?token=#{token}"
                 AdminMailer.send_change_email(new_email, link).deliver_now
-                redirect_to settings_path, notice: 'Email was successfully updated.'
+                redirect_to settings_path, notice: 'Confirmation email has been sent to your new email address. Please check your inbox.'
             end
         else
             redirect_to settings_path, alert: 'Please enter a valid email.'
         end
 
+    end
+
+    def change_email_confirm
+        token = params[:token]
+        begin
+            decoded = JWT.decode(token, Rails.application.secret_key_base)[0]
+            admin_id = decoded['admin_id']
+            new_email = decoded['new_email']
+
+            admin = Admin.find(admin_id)
+            if admin
+                if admin.email == new_email
+                    redirect_to settings_path, alert: 'New email cannot be the same as the current email.'
+                    return
+                end
+                admin.update!(email: new_email)
+                redirect_to settings_path, notice: 'Email was successfully changed.'
+            else
+                redirect_to settings_path, alert: 'Admin not found.'
+            end
+        rescue JWT::ExpiredSignature
+            redirect_to settings_path, alert: 'Token has expired. Please request a new email change.'
+        rescue JWT::DecodeError
+            redirect_to settings_path, alert: 'Invalid token. Please request a new email change.'
+        end
     end
 
     def new_event
