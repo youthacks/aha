@@ -31,7 +31,7 @@ module Api
                 error!({ message: 'Event ID is required' }, 400) if event_slug.blank?
 
                 @event = Event.find_by(slug: event_slug)
-                error!({ message: 'Event not found' }, 404) if @event.nil?
+                error!({ message: 'Event not found'+ event_slug.to_s}, 404) if @event.nil?
 
                 unless @event.admins.include?(@admin) || @event.manager.id == @admin.id
                     error!({ message: 'Unauthorized access to event' }, 403)
@@ -44,7 +44,8 @@ module Api
         
         route_param :event_slug, type: String do
             before do
-                require_event!(event_slug: :event_slug)
+                require_admin!
+                require_event!(event_slug: params[:event_slug])
                 require_manager!
             end
             desc 'Get event settings' do
@@ -112,7 +113,7 @@ module Api
             end
 
             params do
-                requires :name, type: String
+                requires :admin, type: String
             end
             desc 'Invite event admin' do
             summary 'Invite event admin'
@@ -123,16 +124,37 @@ module Api
             failure [[422, 'Invalid admin username or admin already exists', Api::Entities::Error], [403, 'Unauthorized access', Api::Entities::Error]]
             end
             post :invite_admin do
-                admin = Admin.find_by(name: params[:name])
+                admin = Admin.find_by(name: params[:admin])
                 unless admin.present? && admin.id != @event.manager_id && !@event.admins.exists?(admin.id)
                     error!({ message: 'Invalid admin username or admin already exists for this event.' }, 422)
                 end
                 result = AdminInvitation.create!(event_id: @event.id, admin_id: admin.id)
                 if result[:success]
                     status 201
-                    body false
                 else
                 error!({ message: result[:message] }, 422)
+                end
+            end
+
+            desc 'Remove event admin' do
+                summary 'Remove event admin'
+                detail 'Removes an admin from the event if they are associated'
+                tags ['Event Managers']
+                headers AUTH_HEADER_DOC
+                success Api::Entities::Admin::Public
+                failure [[404, 'Admin not found', Api::Entities::Error], [403, 'Unauthorized access', Api::Entities::Error]]
+
+            end
+            params do
+                requires :admin, type: String, desc: 'Name of the admin to remove'
+            end
+            delete :remove_admin do
+                admin = Admin.find_by(name: params[:admin])
+                if admin && @event.admins.exists?(admin.id)
+                    @event.admins.delete(admin)
+                    present admin, with: Api::Entities::Admin::Public
+                else
+                    error!({ message: 'Admin not found' }, 404)
                 end
             end
         end

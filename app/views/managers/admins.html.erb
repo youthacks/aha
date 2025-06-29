@@ -1,4 +1,4 @@
-<h1>Event Admins</h1>
+<h1> </h1>
 <p>Admins can manage events, view participants, and more.</p>
 <h2>Invite an Admin</h2>
 <%= form_with url: event_invite_admin_path, method: :post, local: true do %>
@@ -32,6 +32,7 @@
 			<br>
 			Invited at: <%= admin.invitations.find_by(event: @event).created_at.localtime.strftime("%-d %b, %Y %H:%M") %>
 		</li>
+    <%= button_to "Remove", remove_admin_path(event_slug: @event.slug, admin: admin.name), method: :delete, data: { confirm: "Are you sure you want to remove this admin?" }, class: "btn btn-danger btn-sm ms-2" %>
 		<% end %>
 	</ul>
 <% else %>
@@ -50,4 +51,4 @@
       </li>
     <% end %>
   </ul>
-<% end%>
+<% end %>

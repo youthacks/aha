@@ -17,11 +17,19 @@ class ManagersController < EventsController
                 raise result[:message]
             end
         rescue => e
-            redirect_to event_admins_path(@event.slug), alert: "Failed to invite admin: #{e.message}"
+            redirect_to event_admins_path(event_slug: @event.slug), alert: "Failed to invite admin: #{e.message}"
         end
     end
 
-        
+    def remove_admin
+        admin = Admin.find_by(name: params[:admin])
+        if admin && @event.admins.exists?(admin.id)
+            @event.admins.delete(admin)
+            redirect_to event_admins_path(@event.slug), notice: "Admin removed successfully."
+        else
+            redirect_to event_admins_path(@event.slug), alert: "Admin not found"
+        end
+    end
 
     def update_settings
         @event.update!(name: params[:name], description: params[:description], date: params[:date])

@@ -77,6 +77,7 @@ Rails.application.routes.draw do
 		post "settings/update_airtable_table", to: "managers#update_airtable_table", as: "event_update_airtable_table"
 
 		get "admins", to: "managers#admins", as: "event_admins"
+		delete "admins/remove", to: "managers#remove_admin", as: "remove_admin"
 		post "admins/invite", to: "managers#invite_admin", as: "event_invite_admin"
 
 
