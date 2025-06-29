@@ -134,7 +134,6 @@ class Event < ApplicationRecord
 			end
 			participant = participants.create!(
 				name: name,
-				event_id: id,
 				personal_info: { name: name }.to_json,
 				event_id: id
 			)
