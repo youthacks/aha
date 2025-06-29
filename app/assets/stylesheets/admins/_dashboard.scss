@@ -54,7 +54,7 @@
     flex-wrap: wrap;
     gap: $spacer * 2; // Adds space between cards
     justify-content: center; // Center cards in the container
-
+    
     .stat-card {
       @include card($spacer * 1.5, $border-radius, $box-shadow);
       flex: 1 1 350px; // Grow, shrink, start at 350px

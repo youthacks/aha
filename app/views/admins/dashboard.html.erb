@@ -40,7 +40,7 @@
 <script type="module">
   import Sortable from "sortablejs";
 
-  document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('turbo:load', function() {
     const lists = document.getElementsByClassName('sortable-list');
     Array.from(lists).forEach(function(item) {
       Sortable.create(item, { animation: 1000 });

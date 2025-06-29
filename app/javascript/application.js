@@ -12,12 +12,5 @@ Rails.start()
 application.debug = false
 window.Stimulus   = application
 
-document.addEventListener('turbo:load', function() {
-const lists = document.getElementsByClassName('sortable-list');
-  Array.from(lists).forEach(function(item) {
-    Sortable.create(item, { animation: 150 });
-  });
-});
-
 
 export { application }
