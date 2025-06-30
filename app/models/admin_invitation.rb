@@ -23,7 +23,7 @@ class AdminInvitation < ApplicationRecord
 			Activity.create!(
 				subject: invitation,
 				action: "admin_invitation_create",
-				metadata: { event_id: event_id, admin_id: admin_id }.to_json,
+				metadata: {}.to_json,
 				admin_id: event.manager_id,
 				event_id: event_id
 			)
@@ -42,7 +42,7 @@ class AdminInvitation < ApplicationRecord
 		Activity.create!(
 			subject: self,
 			action: "admin_invitation_accept",
-			metadata: { event_id: event_id, admin_id: admin_id }.to_json,
+			metadata: {}.to_json,
 			admin_id: admin_id,
 			event_id: event_id
 		)
@@ -59,7 +59,7 @@ class AdminInvitation < ApplicationRecord
 		Activity.create!(
 			subject: self,
 			action: "admin_invitation_reject",
-			metadata: { event_id: event_id, admin_id: admin_id }.to_json,
+			metadata: {}.to_json,
 			admin_id: admin_id,
 			event_id: event_id
 		)

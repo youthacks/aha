@@ -15,7 +15,7 @@
   <br><br>
   <%= submit_tag "Update Settings" %>
 <% end %>
-
+<% if @event.sync_with_airtable %>
 <h2>Airtable Sync</h2>
 <p>Sync your participants from Airtable. You will need a valid Airtable API key and base ID, with read and write permissions (you can create a read-only API key, but you will not be able to create a new participant).</p>
 <p>(the API key and base ID are not shown here when updated)
@@ -37,4 +37,5 @@
     <%= text_field_tag :name_column, @event.name_column, required: true %>
     <br><br>
   <%= submit_tag "Save information" %>
+<% end %>
 <% end %>

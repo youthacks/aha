@@ -39,6 +39,7 @@ class ManagersController < EventsController
     end
 
     def update_airtable
+        redirect_to event_settings_path(@event.slug), alert: "Your event does not have Airtable sync enabled. Create a new event and try again."; return unless @event.sync_with_airtable
         @event.update(airtable_api_key: params[:airtable_api_key], airtable_base_id: params[:airtable_base_id])
         redirect_to event_settings_path(@event.slug), notice: "Airtable settings updated successfully."
     rescue => e
@@ -46,6 +47,7 @@ class ManagersController < EventsController
     end
 
     def update_airtable_table
+        redirect_to event_settings_path(@event.slug), alert: "Your event does not have Airtable sync enabled. Create a new event and try again."; return unless @event.sync_with_airtable
         @event.update(airtable_table_name: params[:airtable_table_name], name_column: params[:name_column])
         redirect_to event_settings_path(@event.slug), notice: "Airtable table settings updated successfully."
     rescue => e
