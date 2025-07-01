@@ -17,7 +17,7 @@
   <!-- Flex container with .page-wrapper -->
   <body class="page-wrapper">
     <%= render 'shared/navbar' %>
-    <% if session[:admin_id].present? && defined?(params[:event_slug]) && Event.exists?(slug: params[:event_slug]) && (@event.admins.include?(session[:admin_id]) || @event.manager_id == session[:admin_id]) %>
+    <% if session[:admin_id].present? && defined?(params[:event_slug]) && Event.exists?(slug: params[:event_slug]) && (Event.find_by(slug: params[:event_slug]).admins.include?(session[:admin_id]) || Event.find_by(slug: params[:event_slug]).manager_id == session[:admin_id]) %>
       <%= render 'shared/event_navbar' %>
     <% end %>
 

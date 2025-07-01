@@ -16,6 +16,14 @@ class HomeController < ApplicationController
         render partial: "home/products", locals: { products: @products }
     end
 
+    def event_dashboard
+        if session[:admin_id].present? && Admin.exists?(session[:admin_id]) && params[:event_slug].present? && Event.exists?(slug: params[:event_slug]) && (Event.find_by(slug: params[:event_slug]).admins.include?(session[:admin_id]) || Event.find_by(slug: params[:event_slug]).manager_id == session[:admin_id])
+            redirect_to event_dashboard_path(params[:event_slug])
+        else
+            redirect_to event_products_path(event_slug: params[:event_slug]) if params[:event_slug].present?
+        end
+    end
+
   	private
   	def require_event
         begin 

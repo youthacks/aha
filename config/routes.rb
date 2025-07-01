@@ -81,7 +81,7 @@ Rails.application.routes.draw do
 		post "admins/invite", to: "managers#invite_admin", as: "event_invite_admin"
 
 
-		get "", to: "events#dashboard"
+		get "", to: "home#event_dashboard"
 	end
 
 	# Root path
