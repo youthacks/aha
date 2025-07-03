@@ -79,13 +79,15 @@ class EventsController < AdminsController
       # params[:amount] is the quantity to earn
       participant_ids = params[:participant_ids] || []
       amount_to_earn  = params[:amount].to_i
+        if participant_ids.empty? || amount_to_earn <= 0
+            redirect_to event_dashboard_path, alert: "No participants selected or invalid amount."
+        else
+            Participant.where(id: participant_ids).each do |p|
+                p.earn!(amount: amount_to_earn,admin_id: @admin.id) # or session[:admin_id]
+            end
 
-      Participant.where(id: participant_ids).each do |p|
-        p.earn!(amount: amount_to_earn,admin_id: @admin.id) # or session[:admin_id]
-      end
-
-      redirect_to event_dashboard_path, notice: "#{participant_ids.size} participants earned #{amount_to_earn} token"
-
+            redirect_to event_dashboard_path, notice: "#{participant_ids.size} participant(s) earned #{amount_to_earn} token"
+        end
     end
 
     def bulk_check_in

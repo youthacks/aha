@@ -19,7 +19,7 @@ production:
     host: hackclub.app
     port: 5432
     username: mattsoh
-    password: <%= ENV['DB_PASSWORD'] %>
+    password: nest5nest@
 
   cache:
     <<: *primary_production

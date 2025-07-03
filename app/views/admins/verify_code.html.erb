@@ -8,6 +8,7 @@
             <%= form.text_field "code_#{i}", maxlength: 1, size: 1, class: "code-input", autocomplete: "one-time-code", required: true, autofocus: (i == 0) %>
         <% end %>
         <%= form.hidden_field :code, id: "full-code" %>
+        <%= form.hidden_field :token, value: params[:token] %>
     </div>
 
     <div>

@@ -1,6 +1,7 @@
 class AdminsController < ApplicationController
     before_action :require_admin, except: [:new, :create, :verify_code, :confirm_code, :resend_code]
-    # test
+    before_action :require_signup_token, only: [ :verify_code, :confirm_code, :resend_code]
+
     def index
     end
 
@@ -75,13 +76,16 @@ class AdminsController < ApplicationController
                     return
                 end
 
-                session[:pending_admin] = {
+                token = JWT.encode({
+                    type: "signup",
                     name: name,
-                    password: password,
                     email: email,
-                    code: code
-                }
-                redirect_to verify_code_path
+                    password: password,
+                    code: code,
+                    exp: 30.minutes.from_now.to_i
+                }, Rails.application.secret_key_base)
+				AdminMailer.send_code(email, code).deliver_now
+                redirect_to verify_code_path(token: token)
             end
 
         else
@@ -89,32 +93,30 @@ class AdminsController < ApplicationController
         end
     end
     def resend_code
-        
-        if session[:pending_admin].present?
-            code = session[:pending_admin]["code"]
-            email = session[:pending_admin]["email"]
-            AdminMailer.send_code(email, code).deliver_now
-            redirect_to verify_code_path, notice: 'Code has been resent to your email.'
-        else
-            redirect_to signup_path, alert: 'Please start the signup process first.'
-        end
+        pending_admin = session[:pending_admin]
+        code = pending_admin["code"]
+        email = pending_admin["email"]
+        AdminMailer.send_code(email, code).deliver_now
+        redirect_to verify_code_path, notice: 'Code has been resent to your email.'
     rescue => e
         redirect_to signup_path, alert: "Failed to resend code: #{e.message}" 
     end
     def verify_code
-        unless session[:pending_admin].present?
+        unless pending_admin.present?
             redirect_to signup_path, alert: 'Please start the signup process first.'
         end
     end
   
     def confirm_code
         entered_code = params[:code].strip
-        if session[:pending_admin].present? 
-            if session[:pending_admin]["code"].to_s == entered_code.to_s
-                result = Admin.new!(name: session[:pending_admin]["name"], password: session[:pending_admin]["password"], email: session[:pending_admin]["email"])
-                if result[:success]
-                    session[:pending_admin] = nil
-                    redirect_to login_path, notice: 'Admin was successfully created.'
+        if Admin.exists?(name: pending_admin["name"]) or Admin.exists?(email: pending_admin["email"])
+            redirect_to signup_path, alert: "Username or email already exists. Try another one."
+            return
+        if pending_admin["code"].to_s == entered_code.to_s
+            result = Admin.new!(name: pending_admin["name"], password: pending_admin["password"], email: pending_admin["email"])
+            if result[:success]
+                pending_admin = nil
+                redirect_to login_path, notice: 'Admin was successfully created.'
                 else
                     redirect_to verify_code_path, alert: result[:message]
                 end
@@ -202,4 +204,26 @@ class AdminsController < ApplicationController
         @admin = Admin.find(session[:admin_id])
     end
 
+    def require_signup_token
+        if params[:token].present?
+            begin
+                decoded = JWT.decode(params[:token], Rails.application.secret_key_base)[0]
+                @pending_admin = {
+                    "name" => decoded["name"],
+                    "email" => decoded["email"],
+                    "password" => decoded["password"],
+                    "code" => decoded["code"]  
+                }
+                if Admin.exists?(name: @pending_admin["name"]) or Admin.exists?(email: @pending_admin["email"])
+                    redirect_to signup_path, alert: "Username or email already exists. Try another one."
+                    return
+                end
+            rescue JWT::DecodeError
+                redirect_to signup_path, alert: 'Invalid token. Please start the signup process again.'
+                return
+            end
+        else
+            redirect_to signup_path, alert: 'Token is required.'
+        end
+    end
 end
