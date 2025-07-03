@@ -93,39 +93,38 @@ class AdminsController < ApplicationController
         end
     end
     def resend_code
-        pending_admin = session[:pending_admin]
+        pending_admin = @pending_admin
         code = pending_admin["code"]
         email = pending_admin["email"]
+        token = params[:token]
         AdminMailer.send_code(email, code).deliver_now
-        redirect_to verify_code_path, notice: 'Code has been resent to your email.'
+        redirect_to verify_code_path(token: token), notice: 'Code has been resent to your email.'
     rescue => e
         redirect_to signup_path, alert: "Failed to resend code: #{e.message}" 
     end
+
     def verify_code
-        unless pending_admin.present?
-            redirect_to signup_path, alert: 'Please start the signup process first.'
-        end
+        @token = params[:token]
     end
   
     def confirm_code
         entered_code = params[:code].strip
+        pending_admin = @pending_admin
+        token = @token
         if Admin.exists?(name: pending_admin["name"]) or Admin.exists?(email: pending_admin["email"])
             redirect_to signup_path, alert: "Username or email already exists. Try another one."
             return
+        end
         if pending_admin["code"].to_s == entered_code.to_s
             result = Admin.new!(name: pending_admin["name"], password: pending_admin["password"], email: pending_admin["email"])
             if result[:success]
                 pending_admin = nil
                 redirect_to login_path, notice: 'Admin was successfully created.'
-                else
-                    redirect_to verify_code_path, alert: result[:message]
-                end
             else
-                flash[:alert] = 'Invalid code. Please try again.' 
-                redirect_to verify_code_path
+                redirect_to verify_code_path(token: token), alert: result[:message]
             end
         else
-            redirect_to signup_path, alert: 'Please start the signup process first.'
+            redirect_to verify_code_path(token: token), alert: 'Invalid code. Please try again.'
         end
     end
 
@@ -214,6 +213,7 @@ class AdminsController < ApplicationController
                     "password" => decoded["password"],
                     "code" => decoded["code"]  
                 }
+                @token = params[:token]
                 if Admin.exists?(name: @pending_admin["name"]) or Admin.exists?(email: @pending_admin["email"])
                     redirect_to signup_path, alert: "Username or email already exists. Try another one."
                     return
@@ -223,7 +223,8 @@ class AdminsController < ApplicationController
                 return
             end
         else
-            redirect_to signup_path, alert: 'Token is required.'
+            redirect_to signup_path, alert: 'Token is required.' + params.inspect + params[:token].inspect + params[:code].inspect
+            return
         end
     end
 end

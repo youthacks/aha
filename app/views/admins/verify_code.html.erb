@@ -1,6 +1,5 @@
 <h1>Enter Confirmation Code</h1>
-<p>Code was sent to <%= session[:pending_admin]["email"] %>. Please enter the code to confirm your account.</p>
-
+<p>Code was sent to <%= @pending_admin["email"] %>. Please enter the code to confirm your account.</p>
 <%= form_with url: confirm_code_path, method: :post do |form| %>
     <div>
         <%= form.label :code, "Confirmation Code" %><br>
@@ -8,7 +7,7 @@
             <%= form.text_field "code_#{i}", maxlength: 1, size: 1, class: "code-input", autocomplete: "one-time-code", required: true, autofocus: (i == 0) %>
         <% end %>
         <%= form.hidden_field :code, id: "full-code" %>
-        <%= form.hidden_field :token, value: params[:token] %>
+        <%= form.hidden_field :token, value: @token %>
     </div>
 
     <div>
@@ -66,4 +65,4 @@
     </style>
 <% end %>
 
-<%= button_to "Resend Code", resend_code_path, method: :post, class: "resend-code-button" %>
+<%= button_to "Resend Code", resend_code_path(token: @token), method: :post, class: "resend-code-button" %>

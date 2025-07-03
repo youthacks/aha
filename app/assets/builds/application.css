@@ -850,6 +850,7 @@ body {
 .main-content {
   flex: 1;
   padding: 2rem;
+  align-items: center;
 }
 
 .footer {
