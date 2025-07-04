@@ -10,6 +10,7 @@ module Api
 		}.freeze
 
 		helpers do
+
 			def require_admin!
 				header = headers['Authorization']
 				token = header&.split(' ')&.last
@@ -39,6 +40,8 @@ module Api
 					error!({ message: 'Unauthorized access to event' }, 403)
 				end
 			end
+
+			
 		end
 
 		
@@ -53,6 +56,13 @@ module Api
 			route_param :event_slug, type: String do
 		
 				before do
+					if request.path.match?(%r{/events/[^/]+/products}) && request.request_method == 'GET'
+						event_slug = params[:event_slug]
+						error!({ message: 'Event ID is required' }, 400) if event_slug.blank?
+						@event = Event.find_by(slug: event_slug)
+						error!({ message: 'Event not found' }, 404) if @event.nil?
+						next
+					end
 					require_admin!
 					require_event!(event_slug: params[:event_slug])
 				end
@@ -242,7 +252,6 @@ module Api
 					tags ['Events']
 					success Api::Entities::Product
 					failure [[401, 'Unauthorized', Api::Entities::Error], [404, 'Event not found', Api::Entities::Error]]
-					headers AUTH_HEADER_DOC
 				end
 				params do
 				end
