@@ -251,7 +251,7 @@ module Api
 					detail 'Returns a list of active products for the event'
 					tags ['Events']
 					success Api::Entities::Product
-					failure [[401, 'Unauthorized', Api::Entities::Error], [404, 'Event not found', Api::Entities::Error]]
+					failure [[404, 'Event not found', Api::Entities::Error]]
 				end
 				params do
 				end
