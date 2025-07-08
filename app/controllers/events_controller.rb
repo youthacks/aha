@@ -137,7 +137,7 @@ class EventsController < AdminsController
 
     def delete_participant
         participant = @event.participants.find(params[:id])
-        result = participant.delete!(@admin.id)
+        result = participant.delete!(admin_id: @admin.id)
         
         if result[:success]
             redirect_to event_dashboard_path, notice: "#{participant.name} has been deleted"
