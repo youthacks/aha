@@ -246,19 +246,6 @@ module Api
 					end
 				end
 
-				desc 'Get products for an event' do
-					summary 'Get products for an event'
-					detail 'Returns a list of active products for the event'
-					tags ['Events']
-					success Api::Entities::Product
-					failure [[404, 'Event not found', Api::Entities::Error]]
-				end
-				params do
-				end
-				get 'products' do
-					present @event.products.active, with: Api::Entities::Product
-				end
-
 				desc 'Create a product for an event' do
 					summary 'Create a product for an event'
 					detail 'Creates a new product for the event'

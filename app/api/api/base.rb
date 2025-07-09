@@ -17,6 +17,7 @@ module Api
         mount Api::Admins
         mount Api::Events
         mount Api::Managers
+        mount Api::Public
 
         add_swagger_documentation(
             info: {
