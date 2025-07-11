@@ -17,10 +17,10 @@ if [ "$LOCAL_HASH" != "$REMOTE_HASH" ] || ! docker ps -q -f name=mattsoh_aha | g
 	echo "[$(date '+%Y-%m-%d %H:%M:%S')] New commit detected. Rebuilding and restarting Docker container..."
 	docker container prune -f 2>>"$ERROR_LOG"
 	# Check for disk space issues and prune builder cache if needed
-	if df / | awk 'NR==2 {exit ($5+0 > 90 ? 0 : 1)}'; then
-	  echo "[$(date '+%Y-%m-%d %H:%M:%S')] Disk usage above 90%, running: docker builder prune --all -f"
-	  docker builder prune --all -f 2>>"$ERROR_LOG"
-	fi
+	# if df / | awk 'NR==2 {exit ($5+0 > 90 ? 0 : 1)}'; then
+	#   echo "[$(date '+%Y-%m-%d %H:%M:%S')] Disk usage above 90%, running: docker builder prune --all -f"
+	#   docker builder prune --all -f 2>>"$ERROR_LOG"
+	# fi
 	git reset --hard origin/main
 
 
