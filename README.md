@@ -2,6 +2,8 @@
 
 A token system for hackathons. Try it out at [aha.youthacks.org](https://aha.youthacks.org).
 
+DISCLAIMER: Running Aha locally requires a lot of setup and configuiring multiple API keys, tokens, etc. There are also multiple other dependencies and pre-deployment commands that are required and are not here. Please contact me (at bottom of page) if you need any help, or want the exact instructions.
+
 ---
 
 ## Table of Contents
