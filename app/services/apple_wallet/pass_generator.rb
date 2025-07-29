@@ -40,15 +40,16 @@ module AppleWallet
 
         # 4. Sign the manifest
         pkcs7 = sign_manifest("#{dir}/manifest.json")
-        File.open("#{dir}/signature", "wb") { |f| f.write(pkcs7.to_der) }
+        File.binwrite("#{dir}/signature", pkcs7.to_der)
 
         # 5. Zip into .pkpass
         pass_path = Rails.root.join("tmp", "#{@pass_data[:serialNumber]}.pkpass")
         FileUtils.mkdir_p(pass_path.dirname)
 
         Zip::File.open(pass_path.to_s, Zip::File::CREATE) do |zip|
-          Dir["#{dir}/*"].each do |file|
-            zip.add(File.basename(file), file)
+          Dir["#{dir}/*"].uniq.each do |file|
+            filename = File.basename(file)
+            zip.add(filename, file) unless zip.find_entry(filename)
           end
         end
 
@@ -68,3 +69,4 @@ module AppleWallet
     end
   end
 end
+  
