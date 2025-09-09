@@ -2,7 +2,13 @@
 
 A token system for hackathons. Try it out at [aha.youthacks.org](https://aha.youthacks.org).
 
-DISCLAIMER: Running Aha locally requires a lot of setup and configuiring multiple API keys, tokens, etc. There are also multiple other dependencies and pre-deployment commands that are required and are not here. Please contact me (at bottom of page) if you need any help, or want the exact instructions.
+DISCLAIMER: 
+
+Running Aha locally requires a lot of setup and configuiring multiple API keys, tokens, etc. There are also multiple other dependencies and pre-deployment commands that are required and are not here. Please contact me (at bottom of page) if you need any help, or want the exact instructions.
+
+The demo website is known to frequently not work (due to the nest-deploy-aha.sh that Nest runs every 5 minutes not working when there is a new commit). If that happens, please let me know and I'll redeploy.
+
+The following instructions below are not great but get you part of the way there (for Windows).
 
 ---
 
@@ -46,6 +52,7 @@ DISCLAIMER: Running Aha locally requires a lot of setup and configuiring multipl
 - Add the PostgreSQL `bin` directory (e.g., `C:\Program Files\PostgreSQL\16\bin`) to your PATH environment variable.
 
 ### 3. Install Node.js and Yarn
+- You actually don't need this.
 - Download and install Node.js from [nodejs.org](https://nodejs.org/).
 - Install Yarn:
   ```sh
@@ -98,14 +105,6 @@ You can deploy this app using:
 - **VPS/Cloud**: Set up Ruby, Rails, PostgreSQL, and follow the installation steps above.
 
 ---
-
-## Troubleshooting
-- If you get errors installing the `pg` gem, ensure PostgreSQL is installed and `pg_config` is in your PATH.
-- For Windows, you may need to run:
-  ```sh
-  gem install pg -- --with-pg-config="C:/Program Files/PostgreSQL/16/bin/pg_config.exe"
-  ```
-- If you have other issues, check the logs or open an issue.
 
 ---
 
