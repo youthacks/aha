@@ -132,6 +132,7 @@ GEM
       tzinfo
     execjs (2.10.0)
     ffi (1.17.2)
+    ffi (1.17.2-x64-mingw-ucrt)
     fiddle (1.1.8)
     friendly_id (5.4.2)
       activerecord (>= 4.0.0)
@@ -239,6 +240,8 @@ GEM
       racc (~> 1.4)
     nokogiri (1.18.8-arm64-darwin)
       racc (~> 1.4)
+    nokogiri (1.18.8-x64-mingw-ucrt)
+      racc (~> 1.4)
     nokogiri (1.18.8-x86_64-linux-gnu)
       racc (~> 1.4)
     nokogiri (1.18.8-x86_64-linux-musl)
@@ -249,6 +252,7 @@ GEM
       ast (~> 2.4.1)
       racc
     pg (1.6.0)
+    pg (1.6.0-x64-mingw-ucrt)
     pp (0.6.2)
       prettyprint
     prettyprint (0.2.0)
@@ -436,6 +440,7 @@ PLATFORMS
   arm-linux-gnu
   arm-linux-musl
   arm64-darwin-24
+  x64-mingw-ucrt
   x64-mingw32
   x86_64-linux
   x86_64-linux-gnu

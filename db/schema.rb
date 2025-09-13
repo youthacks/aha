@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_06_01_134113) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_13_144804) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_06_01_134113) do
     t.string "email"
     t.index ["email"], name: "index_admins_on_email", unique: true
     t.index ["name"], name: "index_admins_on_name", unique: true
+  end
+
+  create_table "data_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.json "data"
   end
 
   create_table "event_admins", force: :cascade do |t|

@@ -1,0 +1,2 @@
+class DataToken < ApplicationRecord
+end

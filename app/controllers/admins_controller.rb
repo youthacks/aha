@@ -70,21 +70,25 @@ class AdminsController < ApplicationController
             else
                 code = rand(100_000..999_999)
                 begin
-                    AdminMailer.send_code(email, code).deliver_now
+                    AdminMailer.send_code(email, code)
                 rescue => e
                     redirect_to signup_path, alert: "Failed to send verification email: #{e.message}"
                     return
                 end
-
-                token = JWT.encode({
+                exp = 30.minutes.from_now
+                data_token = DataToken.create!(
+                    data: {
+						name: name,
+						email: email,
+						password: password,
+						code: code
+					}
+				)
+		        token = JWT.encode({
                     type: "signup",
-                    name: name,
-                    email: email,
-                    password: password,
-                    code: code,
-                    exp: 30.minutes.from_now.to_i
-                }, Rails.application.secret_key_base)
-				AdminMailer.send_code(email, code).deliver_now
+					data_token_id: data_token.id,
+					exp: exp.to_i
+				}, Rails.application.secret_key_base)
                 redirect_to verify_code_path(token: token)
             end
 
@@ -206,7 +210,12 @@ class AdminsController < ApplicationController
     def require_signup_token
         if params[:token].present?
             begin
-                decoded = JWT.decode(params[:token], Rails.application.secret_key_base)[0]
+                decoded_jwt = JWT.decode(params[:token], Rails.application.secret_key_base)[0]
+                decoded = DataToken.find(decoded_jwt["data_token_id"]).data
+                if decoded_jwt['exp'] < Time.now.to_i
+                    redirect_to signup_path, alert: 'Token has expired. Please start the signup process again.'
+                    return
+                end
                 @pending_admin = {
                     "name" => decoded["name"],
                     "email" => decoded["email"],

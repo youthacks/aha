@@ -65,12 +65,11 @@ module Api
 			detail 'Returns a JWT pending signup token for further verification'
 			tags ['Signup']
 			success Api::Entities::Token
-			failure [[422, 'Validation failed', Api::Entities::Error]]
+			failure [[422, 'Validation failed', Api::Entities::Error], [500, 'Error sending email', Api::Entities::Error]]
 		end
 		params do
 			requires :name, type: String
-			use :email_param
-			requires :password, type: String
+ 			requires :password, type: String
 		end
 		post do
 			name = params[:name]
@@ -81,14 +80,23 @@ module Api
 				error!({ message: 'Admin already exists' }, 422) if Admin.exists?(email: email) or Admin.exists?(name: name)
 				error!({ message: 'Invalid email format' }, 422) unless email =~ URI::MailTo::EMAIL_REGEXP
 				code = rand(100_000..999_999)
-				AdminMailer.send_code(email, code).deliver_now
+                begin
+                    AdminMailer.send_code(email, code).deliver_now
+                rescue => e
+                    error!({message: "Failed to send verification email: #{e.message}"}, 500)
+                end
 				exp = 30.minutes.from_now
+				data_token = DataToken.create!(
+					data: {
+						name: name,
+						email: email,
+						password: password,
+						code: code
+					}
+				)
 				pending_token = JWT.encode({
 					type: "signup",
-					name: name,
-					email: email,
-					password: password,
-					code: code,
+					data_token_id: data_token.id,
 					exp: exp.to_i
 				}, Rails.application.secret_key_base)
 				{ token: pending_token, message: 'Pending signup token created', expires_at: exp }
@@ -103,7 +111,7 @@ module Api
 			tags ['Signup']
 			headers AUTH_HEADER_DOC
 			success code: 200, message: 'Code resent successfully'
-			failure [[401, 'Missing or invalid token', Api::Entities::Error], [422, 'Validation failed', Api::Entities::Error]]
+			failure [[401, 'Missing, invalid, or expired token', Api::Entities::Error], [422, 'Validation failed', Api::Entities::Error]]
 		end
 		post :resend_code do
 			header = headers['Authorization']
@@ -113,8 +121,10 @@ module Api
 			begin
 				decoded = JWT.decode(token, Rails.application.secret_key_base)[0]
 				error!({message: 'Invalid token type' }, 401) unless decoded['type'] == 'signup'
-				email = decoded['email']
-				code = decoded['code']
+				error!({ message: 'Token has expired' }, 401) if decoded['exp'] < Time.now.to_i
+				data_token = DataToken.find(decoded["data_token_id"])
+				email = data_token.data.email
+				code = data_token.data.code
 				AdminMailer.send_code(email, code).deliver_now
 				{ message: 'Code resent successfully' }
 			rescue JWT::DecodeError
@@ -140,9 +150,10 @@ module Api
 		
 			begin
 				decoded = JWT.decode(token, Rails.application.secret_key_base)[0]
+				data_token = DataToken.find(decoded['data_token_id'])
 				entered_code = params[:code].strip
-				if decoded['code'].to_s == entered_code.to_s
-					result = Admin.new!(name: decoded['name'], password: decoded['password'], email: decoded['email'])
+				if data_token.data.code == entered_code.to_s
+					result = Admin.new!(name: data_token.data.name, password: data_token.data.password, email: data_token.data.email)
 					if result[:success]
 						admin = result[:admin]
 						present admin, with: Api::Entities::Admin::Public
