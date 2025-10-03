@@ -6,8 +6,6 @@ import { UsersModule } from './users/users.module';
 import { EmailModule } from './email/email.module';
 import { EventsModule } from './events/events.module';
 import { AppController } from './app.controller';
-import { UsersService } from './users/users.service';
-import { EventsService } from './events/events.service';
 import { User } from './users/entities/user.entity';
 import { Event } from './events/entities/event.entity';
 import { EventMember } from './events/entities/event-member.entity';
@@ -39,6 +37,6 @@ import { Transaction } from './events/entities/transaction.entity';
     EventsModule,
   ],
   controllers: [AppController],
-  providers: [UsersService, EventsService],
+  providers: [],
 })
 export class AppModule {}

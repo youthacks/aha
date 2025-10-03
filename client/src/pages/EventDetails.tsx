@@ -28,6 +28,9 @@ const EventDetails: React.FC = () => {
   const [showPromoteModal, setShowPromoteModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState('member');
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+
   useEffect(() => {
     if (eventId) {
       loadEventData();
@@ -108,6 +111,25 @@ const EventDetails: React.FC = () => {
       loadEventData();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Purchase failed');
+    }
+  };
+
+  const handleDeleteEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (deleteConfirmText !== event.name) {
+      setError('Event name does not match. Please type the exact event name.');
+      return;
+    }
+
+    try {
+      await eventsService.deleteEvent(eventId!);
+      setSuccess('Event deleted successfully. Redirecting...');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete event');
     }
   };
 
@@ -303,6 +325,33 @@ const EventDetails: React.FC = () => {
             </div>
           )}
         </div>
+
+        {isAdmin && (
+          <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid #e0e0e0' }}>
+            <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Danger Zone</h3>
+            <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+              Once you delete this event, all members, tokens, stations, and transaction history will be permanently removed. This action cannot be undone.
+            </p>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              style={{
+                background: '#dc2626',
+                color: 'white',
+                padding: '12px 24px',
+                borderRadius: '10px',
+                border: 'none',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#b91c1c'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#dc2626'}
+            >
+              🗑️ Delete Event Permanently
+            </button>
+          </div>
+        )}
       </div>
 
       {showTokenModal && selectedMember && (
@@ -391,6 +440,70 @@ const EventDetails: React.FC = () => {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Create Station</button>
                 <button type="button" onClick={() => setShowStationModal(false)} className="btn-secondary">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <h2 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Delete Event</h2>
+            <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px', lineHeight: '1.6' }}>
+              This will permanently delete <strong>"{event.name}"</strong> and all associated data including:
+            </p>
+            <ul style={{ fontSize: '14px', color: '#666', marginBottom: '20px', marginLeft: '20px', lineHeight: '1.8' }}>
+              <li>All {members.length} member(s) and their tokens</li>
+              <li>All {stations.length} buying station(s)</li>
+              <li>Complete transaction history</li>
+            </ul>
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px', marginBottom: '20px' }}>
+              <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>
+                <strong>Warning:</strong> This action cannot be undone!
+              </p>
+            </div>
+            <form onSubmit={handleDeleteEvent}>
+              <div className="form-group">
+                <label style={{ fontWeight: '600' }}>Type the event name to confirm: <strong>{event.name}</strong></label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Enter event name exactly"
+                  required
+                  style={{ fontFamily: 'monospace' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="submit"
+                  disabled={deleteConfirmText !== event.name}
+                  style={{
+                    background: deleteConfirmText === event.name ? '#dc2626' : '#9ca3af',
+                    color: 'white',
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: deleteConfirmText === event.name ? 'pointer' : 'not-allowed',
+                    flex: 1
+                  }}
+                >
+                  Delete Event Permanently
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText('');
+                  }}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>

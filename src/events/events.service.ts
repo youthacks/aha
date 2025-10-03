@@ -281,4 +281,29 @@ export class EventsService {
     await this.membersRepository.clear();
     await this.eventsRepository.clear();
   }
+
+  async deleteEvent(eventId: string, userId: string): Promise<void> {
+    const event = await this.eventsRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    // Only the owner (admin) can delete the event
+    const membership = await this.membersRepository.findOne({
+      where: { eventId, userId },
+    });
+
+    if (!membership || membership.role !== EventRole.ADMIN) {
+      throw new ForbiddenException('Only the event admin can delete this event');
+    }
+
+    // Delete all related data in the correct order (due to foreign key constraints)
+    await this.transactionsRepository.delete({ eventId });
+    await this.stationsRepository.delete({ eventId });
+    await this.membersRepository.delete({ eventId });
+    await this.eventsRepository.delete({ id: eventId });
+  }
 }

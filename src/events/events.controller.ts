@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Put, Delete } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateEventDto, JoinEventDto, UpdateTokensDto, PromoteMemberDto } from './dto/event.dto';
@@ -69,5 +69,10 @@ export class EventsController {
   async getTransactions(@Param('eventId') eventId: string, @Request() req) {
     return this.eventsService.getTransactions(eventId, req.user.userId);
   }
-}
 
+  @Delete(':eventId')
+  async deleteEvent(@Param('eventId') eventId: string, @Request() req) {
+    await this.eventsService.deleteEvent(eventId, req.user.userId);
+    return { message: 'Event deleted successfully' };
+  }
+}

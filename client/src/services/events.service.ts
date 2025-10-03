@@ -83,5 +83,9 @@ export const eventsService = {
     const response = await api.get(`/events/${eventId}/transactions`);
     return response.data;
   },
-};
 
+  deleteEvent: async (eventId: string) => {
+    const response = await api.delete(`/events/${eventId}`);
+    return response.data;
+  },
+};
