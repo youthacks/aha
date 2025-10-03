@@ -4,8 +4,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { EmailModule } from './email/email.module';
+import { EventsModule } from './events/events.module';
 import { AppController } from './app.controller';
+import { UsersService } from './users/users.service';
+import { EventsService } from './events/events.service';
 import { User } from './users/entities/user.entity';
+import { Event } from './events/entities/event.entity';
+import { EventMember } from './events/entities/event-member.entity';
+import { BuyingStation } from './events/entities/buying-station.entity';
+import { Transaction } from './events/entities/transaction.entity';
 
 @Module({
   imports: [
@@ -21,7 +28,7 @@ import { User } from './users/entities/user.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User],
+        entities: [User, Event, EventMember, BuyingStation, Transaction],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -29,7 +36,9 @@ import { User } from './users/entities/user.entity';
     AuthModule,
     UsersModule,
     EmailModule,
+    EventsModule,
   ],
   controllers: [AppController],
+  providers: [UsersService, EventsService],
 })
 export class AppModule {}

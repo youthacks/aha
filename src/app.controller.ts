@@ -1,7 +1,14 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Post, HttpCode } from '@nestjs/common';
+import { UsersService } from './users/users.service';
+import { EventsService } from './events/events.service';
 
 @Controller()
 export class AppController {
+  constructor(
+    private usersService: UsersService,
+    private eventsService: EventsService,
+  ) {}
+
   @Get()
   getHello() {
     return {
@@ -17,6 +24,9 @@ export class AppController {
           resetPassword: 'POST /auth/reset-password',
           profile: 'GET /auth/profile (requires JWT token)',
         },
+        admin: {
+          resetDatabase: 'POST /reset-database',
+        },
       },
     };
   }
@@ -25,6 +35,25 @@ export class AppController {
   health() {
     return {
       status: 'ok',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post('reset-database')
+  @HttpCode(200)
+  async resetDatabase() {
+    await this.eventsService.deleteAll();
+    await this.usersService.deleteAll();
+
+    return {
+      message: 'Database reset successfully',
+      details: {
+        users: 'deleted',
+        events: 'deleted',
+        eventMembers: 'deleted',
+        buyingStations: 'deleted',
+        transactions: 'deleted',
+      },
       timestamp: new Date().toISOString(),
     };
   }

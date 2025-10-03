@@ -126,5 +126,19 @@ export class UsersService {
 
     return this.usersRepository.save(user);
   }
-}
 
+  async deleteAll(): Promise<void> {
+    await this.usersRepository.clear();
+  }
+
+  async count(): Promise<number> {
+    return this.usersRepository.count();
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.usersRepository.find({
+      select: ['id', 'email', 'firstName', 'lastName', 'isEmailVerified', 'createdAt'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+}
