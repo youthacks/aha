@@ -11,7 +11,11 @@ export class AppController {
         auth: {
           register: 'POST /auth/register',
           login: 'POST /auth/login',
-          profile: 'GET /auth/\profile (requires JWT token)',
+          verifyEmail: 'GET /auth/verify-email?email=xxx&token=xxx',
+          resendVerification: 'POST /auth/resend-verification',
+          forgotPassword: 'POST /auth/forgot-password',
+          resetPassword: 'POST /auth/reset-password',
+          profile: 'GET /auth/profile (requires JWT token)',
         },
       },
     };
@@ -25,4 +29,3 @@ export class AppController {
     };
   }
 }
-
