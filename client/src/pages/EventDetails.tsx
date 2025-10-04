@@ -295,9 +295,18 @@ const EventDetails: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3>Purchasables</h3>
                 {canManage && (
-                  <button onClick={() => setShowStationModal(true)} className="btn-primary" style={{ padding: '10px 20px', fontSize: '14px' }}>
-                    + New Purchasable
-                  </button>
+                    <button
+                        onClick={() => setShowStationModal(true)}
+                        className="btn-primary"
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '17px',
+                          width: 'auto',
+                          float: 'right'
+                        }}
+                    >
+                      + New Purchasable
+                    </button>
                 )}
               </div>
 
