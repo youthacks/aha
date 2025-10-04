@@ -138,10 +138,10 @@ const Dashboard: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ color: '#333' }}>My Events</h3>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={() => setShowCreateModal(true)} className="btn-primary" style={{ padding: '10px 20px', fontSize: '14px' }}>
+              <button onClick={() => setShowCreateModal(true)} className="btn-primary" style={{ padding: '10px 20px', fontSize: '14px', width: '150px' }}>
                 + New Event
               </button>
-              <button onClick={() => setShowJoinModal(true)} className="btn-secondary" style={{ padding: '10px 20px', fontSize: '14px' }}>
+              <button onClick={() => setShowJoinModal(true)} className="btn-secondary" style={{ padding: '10px 20px', fontSize: '14px', width: '150px' }}>
                 Join Event
               </button>
             </div>
@@ -240,4 +240,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-

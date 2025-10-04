@@ -107,6 +107,7 @@ code {
   transform: none;
 }
 
+
 .btn-secondary {
   width: 100%;
   padding: 14px;
@@ -118,7 +119,6 @@ code {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 10px;
 }
 
 .btn-secondary:hover {

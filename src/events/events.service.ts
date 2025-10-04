@@ -277,6 +277,13 @@ export class EventsService {
       throw new NotFoundException('Station not found');
     }
 
+    // Set stationId to null for all transactions that reference this station
+    await this.transactionsRepository.update(
+      { stationId },
+      { stationId: null, station: null }
+    );
+
+    // Now delete the station
     await this.purchasablesRepository.delete({ id: stationId });
   }
 
