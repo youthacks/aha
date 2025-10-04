@@ -7,16 +7,36 @@ interface AuthContextType {
   register: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+      const storedUser = authService.getCurrentUser();
+
+      if (token && storedUser) {
+        try {
+          // Validate token by fetching profile
+          const profile = await authService.getProfile();
+          setUser(profile);
+        } catch (error) {
+          // Token is invalid or expired
+          console.error('Token validation failed:', error);
+          authService.logout();
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+
+    validateToken();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -41,6 +61,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         register,
         logout,
         isAuthenticated: !!user,
+        loading,
       }}
     >
       {children}
@@ -55,4 +76,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
