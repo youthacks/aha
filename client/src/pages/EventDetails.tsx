@@ -34,10 +34,18 @@ const EventDetails: React.FC = () => {
   useEffect(() => {
     if (eventId) {
       loadEventData();
+
+      // Set up polling to refresh data every 3 seconds
+      const interval = setInterval(() => {
+        loadEventData(true); // silent refresh
+      }, 3000);
+
+      // Cleanup interval on unmount
+      return () => clearInterval(interval);
     }
   }, [eventId]);
 
-  const loadEventData = async () => {
+  const loadEventData = async (silent = false) => {
     try {
       const data = await eventsService.getEventDetails(eventId!);
       setEvent(data.event);
@@ -49,9 +57,13 @@ const EventDetails: React.FC = () => {
       const txns = await eventsService.getTransactions(eventId!);
       setTransactions(txns);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to load event');
+      if (!silent) {
+        setError(err.response?.data?.message || 'Failed to load event');
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
@@ -65,7 +77,7 @@ const EventDetails: React.FC = () => {
       setShowTokenModal(false);
       setTokenAmount(0);
       setSelectedMember(null);
-      loadEventData();
+      await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update tokens');
     }
@@ -80,7 +92,7 @@ const EventDetails: React.FC = () => {
       setSuccess(`Promoted ${selectedMember.name} to ${selectedRole}`);
       setShowPromoteModal(false);
       setSelectedMember(null);
-      loadEventData();
+      await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to promote member');
     }
@@ -96,7 +108,7 @@ const EventDetails: React.FC = () => {
       setStationName('');
       setStationPrice(0);
       setStationDescription('');
-      loadEventData();
+      await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create purchasable');
     }
@@ -108,7 +120,7 @@ const EventDetails: React.FC = () => {
     try {
       await eventsService.purchase(eventId!, stationId);
       setSuccess(`Successfully purchased ${stationName}!`);
-      loadEventData();
+      await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
       setError(err.response?.data?.message || 'Purchase failed');
     }
