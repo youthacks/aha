@@ -1,19 +1,16 @@
-# AHA-V2 Frontend
+# AHA - Token System Frontend
 
-React TypeScript frontend for the AHA-V2 authentication system.
-
+React TypeScript frontend for the AHA - Token System.
 
 ## Quick Start
 
 ### 1. Make sure the backend is running:
 ```bash
-# In the main aha-v2 directory
 npm run start:dev
 ```
 
 ### 2. Start the frontend:
 ```bash
-# In the client directory
 cd client
 npm start
 ```
@@ -41,6 +38,8 @@ client/src/
 │   ├── Login.tsx              # Login page
 │   ├── Register.tsx           # Registration page
 │   ├── Dashboard.tsx          # User dashboard
+│   ├── EventDetails.tsx       # Event details page
+│   ├── BigScreenMode.tsx      # Big screen display mode
 │   ├── VerifyEmail.tsx        # Email verification page
 │   ├── ForgotPassword.tsx     # Forgot password page
 │   └── ResetPassword.tsx      # Reset password page
@@ -51,16 +50,8 @@ client/src/
 └── index.css                  # Global styles
 ```
 
-## Wipe Database
-To reset the database, you can use the following command in the backend directory:
-
-```bash
-node wipe-db.js
-```
-
 ## Development
 
 The frontend runs on **port 3001** and proxies API requests to the backend on **port 3000**.
 
 All authentication tokens are stored in localStorage and automatically included in API requests.
-

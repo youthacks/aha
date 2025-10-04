@@ -46,23 +46,6 @@ export class UsersService {
   }
 
   async verifyEmail(email: string, token: string): Promise<User> {
-    console.log('🔍 Verification attempt:', { email, token });
-
-    // First, check if user exists
-    const userExists = await this.usersRepository.findOne({ where: { email } });
-    console.log('👤 User found:', userExists ? 'Yes' : 'No');
-
-    if (userExists) {
-      console.log('📋 User details:', {
-        isEmailVerified: userExists.isEmailVerified,
-        hasToken: !!userExists.verificationToken,
-        tokenMatch: userExists.verificationToken === token,
-        tokenExpiry: userExists.verificationTokenExpiry,
-        now: new Date(),
-        isExpired: userExists.verificationTokenExpiry ? userExists.verificationTokenExpiry < new Date() : 'N/A'
-      });
-    }
-
     const user = await this.usersRepository.findOne({
       where: {
         email,

@@ -63,10 +63,7 @@ export const authService = {
   },
 
   verifyEmail: async (email: string, token: string) => {
-
-    console.log('📤 Frontend: Sending verification request', { email, token, tokenLength: token.length });
     const response = await api.get(`/auth/verify-email?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`);
-    console.log('📥 Frontend: Received response', response.data);
     if (response.data.access_token) {
       localStorage.setItem('token', response.data.access_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));

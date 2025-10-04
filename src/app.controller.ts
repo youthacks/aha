@@ -12,7 +12,7 @@ export class AppController {
   @Get()
   getHello() {
     return {
-      message: 'AHA-V2 API is running',
+      message: 'AHA - Token System API is running',
       version: '1.0.0',
       endpoints: {
         auth: {

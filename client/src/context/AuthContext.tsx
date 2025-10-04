@@ -23,12 +23,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (token && storedUser) {
         try {
-          // Validate token by fetching profile
           const profile = await authService.getProfile();
           setUser(profile);
         } catch (error) {
-          // Token is invalid or expired
-          console.error('Token validation failed:', error);
           authService.logout();
           setUser(null);
         }

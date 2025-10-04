@@ -136,7 +136,7 @@ If you didn't create an account, you can safely ignore this email.
             </div>
           </div>
           <div class="footer">
-            <p>&copy; 2025 AHA-V2. All rights reserved.</p>
+            <p>&copy; 2025 AHA - Token System. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -154,14 +154,14 @@ This link will expire in 1 hour.
 
 If you didn't request a password reset, please ignore this email.
 
-- AHA-V2 Team
+- AHA - Token System Team
     `;
 
     try {
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
         to: email,
-        subject: 'Reset Your Password - AHA-V2',
+        subject: 'Reset Your Password - AHA - Token System',
         text: textContent,
         html: htmlContent,
       });

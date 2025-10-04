@@ -1,127 +1,95 @@
-# AHA-V2 Authentication System
+# AHA - Token System
+
+Event management system with authentication and real-time tracking.
 
 ## Tech Stack
+
+**Backend:**
 - NestJS
 - TypeScript
-- Passport.js (JWT & Local strategies)
 - PostgreSQL
 - TypeORM
-- Nodemailer (Gmail SMTP)
-- REST API
+- Passport.js (JWT)
+- Nodemailer
 
-## Setup
+**Frontend:**
+- React 19
+- TypeScript
+- React Router v7
+- Axios
 
-1. Install dependencies:
+## Quick Start
+
+### 1. Install dependencies:
 ```bash
 npm install
+cd client && npm install
 ```
 
-2. Configure database in `.env` file
+### 2. Configure environment:
+Create a `.env` file in the root directory:
+```env
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USER=postgres
+DATABASE_PASSWORD=your_password
+DATABASE_NAME=aha_v2
 
-3. **Configure Gmail SMTP** (See GMAIL_SETUP.md for detailed instructions):
-   - Enable 2-Step Verification on your Google Account
-   - Generate an App Password: https://myaccount.google.com/apppasswords
-   - Update `.env` file with your Gmail credentials:
-   ```env
-   SMTP_USER=your-email@gmail.com
-   SMTP_PASS=your-16-char-app-password
-   SMTP_FROM=AHA-V2 <your-email@gmail.com>
-   ```
+JWT_SECRET=your-secret-key
+JWT_EXPIRATION=24h
 
-4. Start PostgreSQL and create database:
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM=AHA - Token System <your-email@gmail.com>
+
+APP_URL=http://localhost:3001
+```
+
+### 3. Create database:
 ```sql
 CREATE DATABASE aha_v2;
 ```
 
-5. Run the application:
+### 4. Start the application:
 ```bash
+# Backend (runs on port 3000)
 npm run start:dev
+
+# Frontend (runs on port 3001)
+cd client && npm start
 ```
 
 ## Database Management
 
-### Wipe Database (Delete All Data)
-
-If you need to reset the database and delete all data:
-
+### Wipe Database
+To reset the database and delete all data:
 ```bash
 node wipe-db.js
 ```
 
-This will drop all tables. When you restart the backend, TypeORM will automatically recreate them with the latest schema.
-
 ## API Endpoints
 
 ### Authentication
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login user
+- `GET /auth/verify-email` - Verify email
+- `POST /auth/resend-verification` - Resend verification email
+- `POST /auth/forgot-password` - Request password reset
+- `POST /auth/reset-password` - Reset password
+- `GET /auth/profile` - Get user profile (protected)
 
-**POST /auth/register**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "firstName": "John",
-  "lastName": "Doe"
-}
-```
+### Events
+- `GET /events` - List all events
+- `POST /events` - Create event
+- `GET /events/:id` - Get event details
+- `PATCH /events/:id` - Update event
+- `DELETE /events/:id` - Delete event
+- `POST /events/:id/join` - Join event
+- `POST /events/:id/archive` - Archive event
+- `POST /events/:id/unarchive` - Unarchive event
 
-**POST /auth/login**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123"
-}
-```
-
-**GET /auth/verify-email?email=xxx&token=xxx** - Verify email (link sent via email)
-
-**POST /auth/resend-verification**
-```json
-{
-  "email": "user@example.com"
-}
-```
-
-**POST /auth/forgot-password**
-```json
-{
-  "email": "user@example.com"
-}
-```
-
-**POST /auth/reset-password**
-```json
-{
-  "email": "user@example.com",
-  "token": "reset-token",
-  "newPassword": "newPassword123"
-}
-```
-
-**GET /auth/profile** (Protected - requires JWT)
-Headers: `Authorization: Bearer <token>`
-
-### Event System
-
-Events use URL-friendly slugs based on the event name:
-- Event names must be unique
-- Event slugs are automatically generated (e.g., "My Awesome Event" → "my-awesome-event")
-- Users join events using the slug instead of a random code
-
-
----
-
-
-## Running Complete System
-
-**Terminal 1 - Backend:**
-```bash
-npm run start:dev
-```
-
-**Terminal 2 - Frontend:**
-```bash
-   cd client
-   npm start
-```
-
-Then open **http://localhost:3001** in your browser.
+### Admin
+- `POST /reset-database` - Reset entire database
+- `GET /health` - Health check

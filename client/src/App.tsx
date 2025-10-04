@@ -16,12 +16,7 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <div>Loading...</div>
       </div>
     );
@@ -34,30 +29,9 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <Dashboard />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/events/:eventId"
-        element={
-          <PrivateRoute>
-            <EventDetails />
-          </PrivateRoute>
-        }
-      />
-      <Route
-        path="/events/:eventId/bigscreen"
-        element={
-          <PrivateRoute>
-            <BigScreenMode />
-          </PrivateRoute>
-        }
-      />
+      <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/events/:eventId" element={<PrivateRoute><EventDetails /></PrivateRoute>} />
+      <Route path="/events/:eventId/bigscreen" element={<PrivateRoute><BigScreenMode /></PrivateRoute>} />
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
