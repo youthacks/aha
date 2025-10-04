@@ -57,6 +57,7 @@ export class EmailService {
             <p>&copy; 2025 AHA - Token System. All rights reserved.</p>
           </div>
         </div>
+        
       </body>
       </html>
     `;
