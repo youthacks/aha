@@ -27,6 +27,9 @@ export class Purchasable {
   @Column({ default: 0 })
   stock: number;
 
+  @Column({ nullable: true, type: 'text' })
+  imageUrl: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

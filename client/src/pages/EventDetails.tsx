@@ -26,6 +26,7 @@ const EventDetails: React.FC = () => {
   const [stationPrice, setStationPrice] = useState(0);
   const [stationDescription, setStationDescription] = useState('');
   const [stationStock, setStationStock] = useState(0);
+  const [stationImageUrl, setStationImageUrl] = useState('');
 
   const [showEditStationModal, setShowEditStationModal] = useState(false);
   const [selectedStation, setSelectedStation] = useState<Purchasable | null>(null);
@@ -34,6 +35,7 @@ const EventDetails: React.FC = () => {
   const [editStationDescription, setEditStationDescription] = useState('');
   const [editStationStock, setEditStationStock] = useState(0);
   const [editStationAvailable, setEditStationAvailable] = useState(true);
+  const [editStationImageUrl, setEditStationImageUrl] = useState('');
 
   const [showDeleteStationModal, setShowDeleteStationModal] = useState(false);
   const [deleteStationConfirmText, setDeleteStationConfirmText] = useState('');
@@ -125,13 +127,14 @@ const EventDetails: React.FC = () => {
     e.preventDefault();
 
     try {
-      await eventsService.createStation(eventId!, stationName, stationPrice, stationDescription, stationStock);
+      await eventsService.createStation(eventId!, stationName, stationPrice, stationDescription, stationStock, stationImageUrl);
       setSuccess('Purchasable created!');
       setShowStationModal(false);
       setStationName('');
       setStationPrice(0);
       setStationDescription('');
       setStationStock(0);
+      setStationImageUrl('');
       await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create purchasable');
@@ -149,6 +152,7 @@ const EventDetails: React.FC = () => {
         description: editStationDescription,
         stock: editStationStock,
         isAvailable: editStationAvailable,
+        imageUrl: editStationImageUrl,
       });
       setSuccess('Purchasable updated!');
       setShowEditStationModal(false);
@@ -229,6 +233,7 @@ const EventDetails: React.FC = () => {
     setEditStationDescription(station.description || '');
     setEditStationStock(station.stock);
     setEditStationAvailable(station.isAvailable);
+    setEditStationImageUrl(station.imageUrl || '');
     setShowEditStationModal(true);
   };
 
@@ -364,8 +369,21 @@ const EventDetails: React.FC = () => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3>Purchasables</h3>
-                {canManage && (
-                    <button
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  {canManage && (
+                    <>
+                      <button
+                        onClick={() => navigate(`/events/${eventId}/bigscreen`)}
+                        className="btn-secondary"
+                        style={{
+                          padding: '5px 15px',
+                          fontSize: '14px',
+                          width: 'auto',
+                        }}
+                      >
+                        📺 Big Screen Mode
+                      </button>
+                      <button
                         onClick={() => setShowStationModal(true)}
                         className="btn-primary"
                         style={{
@@ -374,10 +392,12 @@ const EventDetails: React.FC = () => {
                           width: 'auto',
                           float: 'right'
                         }}
-                    >
-                      + New Purchasable
-                    </button>
-                )}
+                      >
+                        + New Purchasable
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {purchasables.length === 0 ? (
@@ -633,6 +653,16 @@ const EventDetails: React.FC = () => {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label>Image URL (Optional)</label>
+                <input
+                  type="text"
+                  value={stationImageUrl}
+                  onChange={(e) => setStationImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e0e0e0' }}
+                />
+              </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Create Purchasable</button>
                 <button type="button" onClick={() => setShowStationModal(false)} className="btn-secondary">Cancel</button>
@@ -669,12 +699,12 @@ const EventDetails: React.FC = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Stock</label>
+                <label>Stock Quantity</label>
                 <input
                   type="number"
                   value={editStationStock}
                   onChange={(e) => setEditStationStock(parseInt(e.target.value))}
-                  placeholder="How many available?"
+                  placeholder="How many in stock?"
                   min={0}
                   required
                 />
@@ -688,6 +718,32 @@ const EventDetails: React.FC = () => {
                   rows={2}
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e0e0e0' }}
                 />
+              </div>
+              <div className="form-group">
+                <label>Image URL (Optional)</label>
+                <input
+                  type="url"
+                  value={editStationImageUrl}
+                  onChange={(e) => setEditStationImageUrl(e.target.value)}
+                  placeholder="https://example.com/image.jpg"
+                />
+                {editStationImageUrl && (
+                  <div style={{ marginTop: '10px' }}>
+                    <img
+                      src={editStationImageUrl}
+                      alt="Preview"
+                      style={{
+                        maxWidth: '200px',
+                        maxHeight: '200px',
+                        borderRadius: '10px',
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="form-group">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>

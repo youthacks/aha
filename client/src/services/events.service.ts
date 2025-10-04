@@ -29,6 +29,7 @@ export interface Purchasable {
   price: number;
   isAvailable: boolean;
   stock: number;
+  imageUrl?: string;
 }
 
 export interface Transaction {
@@ -81,8 +82,8 @@ export const eventsService = {
     return response.data;
   },
 
-  createStation: async (eventId: string, name: string, price: number, description?: string, stock?: number) => {
-    const response = await api.post(`/events/${eventId}/stations`, { name, price, description, stock });
+  createStation: async (eventId: string, name: string, price: number, description?: string, stock?: number, imageUrl?: string) => {
+    const response = await api.post(`/events/${eventId}/stations`, { name, price, description, stock, imageUrl });
     return response.data;
   },
 

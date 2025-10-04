@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import EventDetails from './pages/EventDetails';
+import BigScreenMode from './pages/BigScreenMode';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
@@ -49,7 +50,15 @@ function AppRoutes() {
           </PrivateRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route
+        path="/events/:eventId/bigscreen"
+        element={
+          <PrivateRoute>
+            <BigScreenMode />
+          </PrivateRoute>
+        }
+      />
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 }
