@@ -28,6 +28,7 @@ export interface Purchasable {
   description: string;
   price: number;
   isAvailable: boolean;
+  stock: number;
 }
 
 export interface Transaction {
@@ -80,8 +81,18 @@ export const eventsService = {
     return response.data;
   },
 
-  createStation: async (eventId: string, name: string, price: number, description?: string) => {
-    const response = await api.post(`/events/${eventId}/stations`, { name, price, description });
+  createStation: async (eventId: string, name: string, price: number, description?: string, stock?: number) => {
+    const response = await api.post(`/events/${eventId}/stations`, { name, price, description, stock });
+    return response.data;
+  },
+
+  updateStation: async (eventId: string, stationId: string, data: Partial<Purchasable>) => {
+    const response = await api.put(`/events/${eventId}/stations/${stationId}`, data);
+    return response.data;
+  },
+
+  deleteStation: async (eventId: string, stationId: string) => {
+    const response = await api.delete(`/events/${eventId}/stations/${stationId}`);
     return response.data;
   },
 

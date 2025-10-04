@@ -25,6 +25,18 @@ const EventDetails: React.FC = () => {
   const [stationName, setStationName] = useState('');
   const [stationPrice, setStationPrice] = useState(0);
   const [stationDescription, setStationDescription] = useState('');
+  const [stationStock, setStationStock] = useState(0);
+
+  const [showEditStationModal, setShowEditStationModal] = useState(false);
+  const [selectedStation, setSelectedStation] = useState<Purchasable | null>(null);
+  const [editStationName, setEditStationName] = useState('');
+  const [editStationPrice, setEditStationPrice] = useState(0);
+  const [editStationDescription, setEditStationDescription] = useState('');
+  const [editStationStock, setEditStationStock] = useState(0);
+  const [editStationAvailable, setEditStationAvailable] = useState(true);
+
+  const [showDeleteStationModal, setShowDeleteStationModal] = useState(false);
+  const [deleteStationConfirmText, setDeleteStationConfirmText] = useState('');
 
   const [showPromoteModal, setShowPromoteModal] = useState(false);
   const [selectedRole, setSelectedRole] = useState('member');
@@ -113,15 +125,37 @@ const EventDetails: React.FC = () => {
     e.preventDefault();
 
     try {
-      await eventsService.createStation(eventId!, stationName, stationPrice, stationDescription);
+      await eventsService.createStation(eventId!, stationName, stationPrice, stationDescription, stationStock);
       setSuccess('Purchasable created!');
       setShowStationModal(false);
       setStationName('');
       setStationPrice(0);
       setStationDescription('');
+      setStationStock(0);
       await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create purchasable');
+    }
+  };
+
+  const handleEditStation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStation) return;
+
+    try {
+      await eventsService.updateStation(eventId!, selectedStation.id, {
+        name: editStationName,
+        price: editStationPrice,
+        description: editStationDescription,
+        stock: editStationStock,
+        isAvailable: editStationAvailable,
+      });
+      setSuccess('Purchasable updated!');
+      setShowEditStationModal(false);
+      setSelectedStation(null);
+      await loadEventData(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update purchasable');
     }
   };
 
@@ -156,6 +190,26 @@ const EventDetails: React.FC = () => {
     }
   };
 
+  const handleDeleteStation = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (deleteStationConfirmText !== selectedStation?.name) {
+      setError('Purchasable name does not match. Please type the exact purchasable name.');
+      return;
+    }
+
+    try {
+      await eventsService.deleteStation(eventId!, selectedStation!.id);
+      setSuccess('Purchasable deleted successfully.');
+      setShowDeleteStationModal(false);
+      setDeleteStationConfirmText('');
+      setSelectedStation(null);
+      await loadEventData(true); // Immediate refresh after action
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete purchasable');
+    }
+  };
+
   const openTokenModal = (member: EventMember) => {
     setSelectedMember(member);
     setTokenAmount(0);
@@ -166,6 +220,22 @@ const EventDetails: React.FC = () => {
     setSelectedMember(member);
     setSelectedRole(member.role);
     setShowPromoteModal(true);
+  };
+
+  const openEditStationModal = (station: Purchasable) => {
+    setSelectedStation(station);
+    setEditStationName(station.name);
+    setEditStationPrice(station.price);
+    setEditStationDescription(station.description || '');
+    setEditStationStock(station.stock);
+    setEditStationAvailable(station.isAvailable);
+    setShowEditStationModal(true);
+  };
+
+  const openDeleteStationModal = (station: Purchasable) => {
+    setSelectedStation(station);
+    setDeleteStationConfirmText('');
+    setShowDeleteStationModal(true);
   };
 
   if (loading) {
@@ -319,17 +389,44 @@ const EventDetails: React.FC = () => {
                 <div className="stations-grid">
                   {purchasables.map(station => (
                     <div key={station.id} className="station-card">
-                      <h4>{station.name}</h4>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                        <h4 style={{ margin: 0, flex: 1 }}>{station.name}</h4>
+                        {canManage && (
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button
+                              onClick={() => openEditStationModal(station)}
+                              className="btn-small"
+                              style={{ fontSize: '12px', padding: '4px 8px' }}
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => openDeleteStationModal(station)}
+                              className="btn-small btn-secondary-small"
+                              style={{ fontSize: '12px', padding: '4px 8px', background: '#dc2626' }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = '#b91c1c'}
+                              onMouseLeave={(e) => e.currentTarget.style.background = '#dc2626'}
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       {station.description && <p className="station-description">{station.description}</p>}
+                      <div style={{ fontSize: '13px', color: '#666', marginTop: '8px', marginBottom: '8px' }}>
+                        Stock: <strong style={{ color: station.stock > 0 ? '#059669' : '#dc2626' }}>
+                          {station.stock > 0 ? `${station.stock} available` : 'Out of stock'}
+                        </strong>
+                      </div>
                       <div className="station-footer">
                         <div className="station-price">{station.price} 🪙</div>
                         {station.isAvailable && isRegularMember && (
                           <button
                             onClick={() => handlePurchase(station.id, station.name)}
                             className="btn-purchase"
-                            disabled={myTokens < station.price}
+                            disabled={myTokens < station.price || station.stock <= 0}
                           >
-                            {myTokens < station.price ? 'Insufficient Tokens' : 'Purchase'}
+                            {station.stock <= 0 ? 'Out of Stock' : myTokens < station.price ? 'Insufficient Tokens' : 'Purchase'}
                           </button>
                         )}
                         {!isRegularMember && (
@@ -525,9 +622,87 @@ const EventDetails: React.FC = () => {
                   style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e0e0e0' }}
                 />
               </div>
+              <div className="form-group">
+                <label>Stock Quantity</label>
+                <input
+                  type="number"
+                  value={stationStock}
+                  onChange={(e) => setStationStock(parseInt(e.target.value))}
+                  placeholder="How many in stock?"
+                  min={0}
+                  required
+                />
+              </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Create Purchasable</button>
                 <button type="button" onClick={() => setShowStationModal(false)} className="btn-secondary">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditStationModal && selectedStation && (
+        <div className="modal-overlay" onClick={() => setShowEditStationModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Edit Purchasable</h2>
+            <form onSubmit={handleEditStation}>
+              <div className="form-group">
+                <label>Purchasable Name</label>
+                <input
+                  type="text"
+                  value={editStationName}
+                  onChange={(e) => setEditStationName(e.target.value)}
+                  placeholder="e.g., Premium Snack Box"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Price (Tokens)</label>
+                <input
+                  type="number"
+                  value={editStationPrice}
+                  onChange={(e) => setEditStationPrice(parseInt(e.target.value))}
+                  placeholder="How many tokens?"
+                  min={1}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Stock</label>
+                <input
+                  type="number"
+                  value={editStationStock}
+                  onChange={(e) => setEditStationStock(parseInt(e.target.value))}
+                  placeholder="How many available?"
+                  min={0}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Description (Optional)</label>
+                <textarea
+                  value={editStationDescription}
+                  onChange={(e) => setEditStationDescription(e.target.value)}
+                  placeholder="What can they buy?"
+                  rows={2}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e0e0e0' }}
+                />
+              </div>
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={editStationAvailable}
+                    onChange={(e) => setEditStationAvailable(e.target.checked)}
+                    style={{ width: 'auto', cursor: 'pointer' }}
+                  />
+                  <span>Available for purchase</span>
+                </label>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="submit" className="btn-primary">Update Purchasable</button>
+                <button type="button" onClick={() => setShowEditStationModal(false)} className="btn-secondary">Cancel</button>
               </div>
             </form>
           </div>
@@ -586,6 +761,65 @@ const EventDetails: React.FC = () => {
                   onClick={() => {
                     setShowDeleteModal(false);
                     setDeleteConfirmText('');
+                  }}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteStationModal && selectedStation && (
+        <div className="modal-overlay" onClick={() => setShowDeleteStationModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <h2 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Delete Purchasable</h2>
+            <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+              Are you sure you want to delete <strong>"{selectedStation.name}"</strong>?
+            </p>
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px', marginBottom: '20px' }}>
+              <p style={{ fontSize: '13px', color: '#991b1b', margin: 0 }}>
+                <strong>Warning:</strong> This action cannot be undone!
+              </p>
+            </div>
+            <form onSubmit={handleDeleteStation}>
+              <div className="form-group">
+                <label style={{ fontWeight: '600' }}>Type the purchasable name to confirm: <strong>{selectedStation.name}</strong></label>
+                <input
+                  type="text"
+                  value={deleteStationConfirmText}
+                  onChange={(e) => setDeleteStationConfirmText(e.target.value)}
+                  placeholder="Enter purchasable name exactly"
+                  required
+                  style={{ fontFamily: 'monospace' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="submit"
+                  disabled={deleteStationConfirmText !== selectedStation.name}
+                  style={{
+                    background: deleteStationConfirmText === selectedStation.name ? '#dc2626' : '#9ca3af',
+                    color: 'white',
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: deleteStationConfirmText === selectedStation.name ? 'pointer' : 'not-allowed',
+                    flex: 1
+                  }}
+                >
+                  Delete Purchasable
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteStationModal(false);
+                    setDeleteStationConfirmText('');
                   }}
                   className="btn-secondary"
                   style={{ flex: 1 }}

@@ -24,7 +24,9 @@ export class Purchasable {
   @Column({ default: true })
   isAvailable: boolean;
 
+  @Column({ default: 0 })
+  stock: number;
+
   @CreateDateColumn()
   createdAt: Date;
 }
-

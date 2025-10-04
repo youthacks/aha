@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, UseGuards, Request, Put, Delete } f
 import { EventsService } from './events.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateEventDto, JoinEventDto, UpdateTokensDto, PromoteMemberDto } from './dto/event.dto';
-import { CreateStationDto, PurchaseDto } from './dto/station.dto';
+import { CreateStationDto, PurchaseDto, UpdateStationDto } from './dto/station.dto';
 
 @Controller('events')
 @UseGuards(JwtAuthGuard)
@@ -54,6 +54,26 @@ export class EventsController {
     @Body() createDto: CreateStationDto,
   ) {
     return this.eventsService.createStation(eventId, req.user.id, createDto);
+  }
+
+  @Put(':eventId/stations/:stationId')
+  async updateStation(
+    @Param('eventId') eventId: string,
+    @Param('stationId') stationId: string,
+    @Request() req,
+    @Body() updateDto: UpdateStationDto,
+  ) {
+    return this.eventsService.updateStation(eventId, stationId, req.user.id, updateDto);
+  }
+
+  @Delete(':eventId/stations/:stationId')
+  async deleteStation(
+    @Param('eventId') eventId: string,
+    @Param('stationId') stationId: string,
+    @Request() req,
+  ) {
+    await this.eventsService.deleteStation(eventId, stationId, req.user.id);
+    return { message: 'Station deleted successfully' };
   }
 
   @Post(':eventId/purchase')

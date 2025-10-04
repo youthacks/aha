@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, IsNumber, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateStationDto {
   @IsString()
@@ -11,6 +11,32 @@ export class CreateStationDto {
 
   @IsNumber()
   price: number;
+
+  @IsNumber()
+  @IsOptional()
+  stock?: number;
+}
+
+export class UpdateStationDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsNumber()
+  @IsOptional()
+  price?: number;
+
+  @IsNumber()
+  @IsOptional()
+  stock?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  isAvailable?: boolean;
 }
 
 export class PurchaseDto {
@@ -18,4 +44,3 @@ export class PurchaseDto {
   @IsNotEmpty()
   stationId: string;
 }
-

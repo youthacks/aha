@@ -6,7 +6,7 @@ import { EventMember, EventRole } from './entities/event-member.entity';
 import { Purchasable } from './entities/purchasable.entity';
 import { Transaction } from './entities/transaction.entity';
 import { CreateEventDto, JoinEventDto, UpdateTokensDto, PromoteMemberDto } from './dto/event.dto';
-import { CreateStationDto, PurchaseDto } from './dto/station.dto';
+import { CreateStationDto, PurchaseDto, UpdateStationDto } from './dto/station.dto';
 
 @Injectable()
 export class EventsService {
@@ -233,9 +233,51 @@ export class EventsService {
     const station = this.purchasablesRepository.create({
       ...createDto,
       eventId,
+      stock: createDto.stock || 0,
     });
 
     return this.purchasablesRepository.save(station);
+  }
+
+  async updateStation(eventId: string, stationId: string, userId: string, updateDto: UpdateStationDto): Promise<Purchasable> {
+    const member = await this.membersRepository.findOne({
+      where: { eventId, userId },
+    });
+
+    if (!member || (member.role !== EventRole.ADMIN && member.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only admins and managers can update stations');
+    }
+
+    const station = await this.purchasablesRepository.findOne({
+      where: { id: stationId, eventId },
+    });
+
+    if (!station) {
+      throw new NotFoundException('Station not found');
+    }
+
+    Object.assign(station, updateDto);
+    return this.purchasablesRepository.save(station);
+  }
+
+  async deleteStation(eventId: string, stationId: string, userId: string): Promise<void> {
+    const member = await this.membersRepository.findOne({
+      where: { eventId, userId },
+    });
+
+    if (!member || (member.role !== EventRole.ADMIN && member.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only admins and managers can delete stations');
+    }
+
+    const station = await this.purchasablesRepository.findOne({
+      where: { id: stationId, eventId },
+    });
+
+    if (!station) {
+      throw new NotFoundException('Station not found');
+    }
+
+    await this.purchasablesRepository.delete({ id: stationId });
   }
 
   async purchase(eventId: string, userId: string, purchaseDto: PurchaseDto): Promise<Transaction> {
@@ -264,12 +306,20 @@ export class EventsService {
       throw new BadRequestException('Station is not available');
     }
 
+    if (station.stock <= 0) {
+      throw new BadRequestException('Out of stock');
+    }
+
     if (member.tokens < station.price) {
       throw new BadRequestException('Insufficient tokens');
     }
 
     member.tokens -= station.price;
     await this.membersRepository.save(member);
+
+    // Decrease stock
+    station.stock -= 1;
+    await this.purchasablesRepository.save(station);
 
     const transaction = this.transactionsRepository.create({
       eventId,
