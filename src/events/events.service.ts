@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { EventMember, EventRole } from './entities/event-member.entity';
-import { BuyingStation } from './entities/buying-station.entity';
+import { Purchasable } from './entities/purchasable.entity';
 import { Transaction } from './entities/transaction.entity';
 import { CreateEventDto, JoinEventDto, UpdateTokensDto, PromoteMemberDto } from './dto/event.dto';
 import { CreateStationDto, PurchaseDto } from './dto/station.dto';
@@ -15,8 +15,8 @@ export class EventsService {
     private eventsRepository: Repository<Event>,
     @InjectRepository(EventMember)
     private membersRepository: Repository<EventMember>,
-    @InjectRepository(BuyingStation)
-    private stationsRepository: Repository<BuyingStation>,
+    @InjectRepository(Purchasable)
+    private purchasablesRepository: Repository<Purchasable>,
     @InjectRepository(Transaction)
     private transactionsRepository: Repository<Transaction>,
   ) {}
@@ -122,7 +122,7 @@ export class EventsService {
       order: { tokens: 'DESC' },
     });
 
-    const stations = await this.stationsRepository.find({
+    const stations = await this.purchasablesRepository.find({
       where: { eventId },
     });
 
@@ -202,7 +202,7 @@ export class EventsService {
     return this.membersRepository.save(targetMember);
   }
 
-  async createStation(eventId: string, userId: string, createDto: CreateStationDto): Promise<BuyingStation> {
+  async createStation(eventId: string, userId: string, createDto: CreateStationDto): Promise<Purchasable> {
     const member = await this.membersRepository.findOne({
       where: { eventId, userId },
     });
@@ -211,12 +211,12 @@ export class EventsService {
       throw new ForbiddenException('Only admins and managers can create stations');
     }
 
-    const station = this.stationsRepository.create({
+    const station = this.purchasablesRepository.create({
       ...createDto,
       eventId,
     });
 
-    return this.stationsRepository.save(station);
+    return this.purchasablesRepository.save(station);
   }
 
   async purchase(eventId: string, userId: string, purchaseDto: PurchaseDto): Promise<Transaction> {
@@ -228,7 +228,7 @@ export class EventsService {
       throw new ForbiddenException('Not a member of this event');
     }
 
-    const station = await this.stationsRepository.findOne({
+    const station = await this.purchasablesRepository.findOne({
       where: { id: purchaseDto.stationId, eventId },
     });
 
@@ -277,7 +277,7 @@ export class EventsService {
 
   async deleteAll(): Promise<void> {
     await this.transactionsRepository.clear();
-    await this.stationsRepository.clear();
+    await this.purchasablesRepository.clear();
     await this.membersRepository.clear();
     await this.eventsRepository.clear();
   }
@@ -302,7 +302,7 @@ export class EventsService {
 
     // Delete all related data in the correct order (due to foreign key constraints)
     await this.transactionsRepository.delete({ eventId });
-    await this.stationsRepository.delete({ eventId });
+    await this.purchasablesRepository.delete({ eventId });
     await this.membersRepository.delete({ eventId });
     await this.eventsRepository.delete({ id: eventId });
   }

@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
 import { Event } from './event.entity';
 import { User } from '../../users/entities/user.entity';
-import { BuyingStation } from './buying-station.entity';
+import { Purchasable } from './purchasable.entity';
 
 @Entity('transactions')
 export class Transaction {
@@ -20,7 +20,7 @@ export class Transaction {
   @Column()
   userId: string;
 
-  @Column()
+  @Column('decimal', { precision: 10, scale: 2 })
   amount: number;
 
   @Column()
@@ -29,13 +29,12 @@ export class Transaction {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToOne(() => BuyingStation, { nullable: true })
-  station: BuyingStation;
-
   @Column({ nullable: true })
   stationId: string;
+
+  @ManyToOne(() => Purchasable, { nullable: true })
+  station: Purchasable;
 
   @CreateDateColumn()
   createdAt: Date;
 }
-

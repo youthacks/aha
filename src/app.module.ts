@@ -9,7 +9,7 @@ import { AppController } from './app.controller';
 import { User } from './users/entities/user.entity';
 import { Event } from './events/entities/event.entity';
 import { EventMember } from './events/entities/event-member.entity';
-import { BuyingStation } from './events/entities/buying-station.entity';
+import { Purchasable } from './events/entities/purchasable.entity';
 import { Transaction } from './events/entities/transaction.entity';
 
 @Module({
@@ -26,7 +26,7 @@ import { Transaction } from './events/entities/transaction.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [User, Event, EventMember, BuyingStation, Transaction],
+        entities: [User, Event, EventMember, Purchasable, Transaction],
         synchronize: true,
       }),
       inject: [ConfigService],

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { eventsService, EventMember, BuyingStation, Transaction } from '../services/events.service';
+import { eventsService, EventMember, Purchasable, Transaction } from '../services/events.service';
 
 const EventDetails: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
   const [members, setMembers] = useState<EventMember[]>([]);
-  const [stations, setStations] = useState<BuyingStation[]>([]);
+  const [purchasables, setPurchasables] = useState<Purchasable[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [myRole, setMyRole] = useState('');
   const [myTokens, setMyTokens] = useState(0);
@@ -42,7 +42,7 @@ const EventDetails: React.FC = () => {
       const data = await eventsService.getEventDetails(eventId!);
       setEvent(data.event);
       setMembers(data.members);
-      setStations(data.stations);
+      setPurchasables(data.stations);
       setMyRole(data.myRole);
       setMyTokens(data.myTokens);
 
@@ -91,14 +91,14 @@ const EventDetails: React.FC = () => {
 
     try {
       await eventsService.createStation(eventId!, stationName, stationPrice, stationDescription);
-      setSuccess('Buying station created!');
+      setSuccess('Purchasable created!');
       setShowStationModal(false);
       setStationName('');
       setStationPrice(0);
       setStationDescription('');
       loadEventData();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create station');
+      setError(err.response?.data?.message || 'Failed to create purchasable');
     }
   };
 
@@ -183,7 +183,7 @@ const EventDetails: React.FC = () => {
             Members ({members.length})
           </button>
           <button className={activeTab === 'stations' ? 'tab active' : 'tab'} onClick={() => setActiveTab('stations')}>
-            Buying Stations ({stations.length})
+            Purchasables ({purchasables.length})
           </button>
           <button className={activeTab === 'history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('history')}>
             My History
@@ -199,8 +199,8 @@ const EventDetails: React.FC = () => {
                   <div className="stat-label">Members</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{stations.length}</div>
-                  <div className="stat-label">Buying Stations</div>
+                  <div className="stat-value">{purchasables.length}</div>
+                  <div className="stat-label">Purchasables</div>
                 </div>
                 <div className="stat-card">
                   <div className="stat-value">{myTokens}</div>
@@ -262,22 +262,22 @@ const EventDetails: React.FC = () => {
           {activeTab === 'stations' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3>Buying Stations</h3>
+                <h3>Purchasables</h3>
                 {canManage && (
                   <button onClick={() => setShowStationModal(true)} className="btn-primary" style={{ padding: '10px 20px', fontSize: '14px' }}>
-                    + New Station
+                    + New Purchasable
                   </button>
                 )}
               </div>
 
-              {stations.length === 0 ? (
+              {purchasables.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', background: '#f9f9f9', borderRadius: '10px' }}>
-                  <p style={{ color: '#666' }}>No buying stations yet.</p>
+                  <p style={{ color: '#666' }}>No purchasables yet.</p>
                   {canManage && <p style={{ color: '#999', fontSize: '14px', marginTop: '10px' }}>Create one to let members spend their tokens!</p>}
                 </div>
               ) : (
                 <div className="stations-grid">
-                  {stations.map(station => (
+                  {purchasables.map(station => (
                     <div key={station.id} className="station-card">
                       <h4>{station.name}</h4>
                       {station.description && <p className="station-description">{station.description}</p>}
@@ -330,7 +330,7 @@ const EventDetails: React.FC = () => {
           <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid #e0e0e0' }}>
             <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Danger Zone</h3>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
-              Once you delete this event, all members, tokens, stations, and transaction history will be permanently removed. This action cannot be undone.
+              Once you delete this event, all members, tokens, purchasables, and transaction history will be permanently removed. This action cannot be undone.
             </p>
             <button
               onClick={() => setShowDeleteModal(true)}
@@ -404,10 +404,10 @@ const EventDetails: React.FC = () => {
       {showStationModal && (
         <div className="modal-overlay" onClick={() => setShowStationModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Create Buying Station</h2>
+            <h2>Create Purchasable</h2>
             <form onSubmit={handleCreateStation}>
               <div className="form-group">
-                <label>Station Name</label>
+                <label>Purchasable Name</label>
                 <input
                   type="text"
                   value={stationName}
@@ -438,7 +438,7 @@ const EventDetails: React.FC = () => {
                 />
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button type="submit" className="btn-primary">Create Station</button>
+                <button type="submit" className="btn-primary">Create Purchasable</button>
                 <button type="button" onClick={() => setShowStationModal(false)} className="btn-secondary">Cancel</button>
               </div>
             </form>
@@ -455,7 +455,7 @@ const EventDetails: React.FC = () => {
             </p>
             <ul style={{ fontSize: '14px', color: '#666', marginBottom: '20px', marginLeft: '20px', lineHeight: '1.8' }}>
               <li>All {members.length} member(s) and their tokens</li>
-              <li>All {stations.length} buying station(s)</li>
+              <li>All {purchasables.length} purchasable(s)</li>
               <li>Complete transaction history</li>
             </ul>
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px', marginBottom: '20px' }}>

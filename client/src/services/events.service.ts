@@ -22,7 +22,7 @@ export interface EventMember {
   joinedAt: string;
 }
 
-export interface BuyingStation {
+export interface Purchasable {
   id: string;
   name: string;
   description: string;
