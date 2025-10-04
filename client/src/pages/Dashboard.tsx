@@ -97,6 +97,11 @@ const Dashboard: React.FC = () => {
     return null;
   }
 
+  // Group events by role
+  const adminEvents = events.filter(e => e.myRole === 'admin');
+  const managerEvents = events.filter(e => e.myRole === 'manager');
+  const memberEvents = events.filter(e => e.myRole === 'member');
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-card">
@@ -162,20 +167,79 @@ const Dashboard: React.FC = () => {
               <p style={{ color: '#999', fontSize: '14px' }}>Create a new event or join an existing one with a code!</p>
             </div>
           ) : (
-            <div className="events-grid">
-              {events.map(event => (
-                <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
-                  <h4>{event.name}</h4>
-                  <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
-                  <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
-                    <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
-                      {event.myTokens} 🪙
-                    </span>
+            <>
+              {/* Admin Events */}
+              {adminEvents.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h4 style={{ color: '#ff6b6b', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="role-badge role-admin">ADMIN</span>
+                    <span style={{ color: '#666', fontSize: '14px', fontWeight: 'normal' }}>({adminEvents.length} event{adminEvents.length !== 1 ? 's' : ''})</span>
+                  </h4>
+                  <div className="events-grid">
+                    {adminEvents.map(event => (
+                      <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
+                        <h4>{event.name}</h4>
+                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                        <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
+                          <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
+                            {event.myTokens} 🪙
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* Manager Events */}
+              {managerEvents.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h4 style={{ color: '#ffa726', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="role-badge role-manager">MANAGER</span>
+                    <span style={{ color: '#666', fontSize: '14px', fontWeight: 'normal' }}>({managerEvents.length} event{managerEvents.length !== 1 ? 's' : ''})</span>
+                  </h4>
+                  <div className="events-grid">
+                    {managerEvents.map(event => (
+                      <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
+                        <h4>{event.name}</h4>
+                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                        <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
+                          <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
+                            {event.myTokens} 🪙
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Member Events */}
+              {memberEvents.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                  <h4 style={{ color: '#66bb6a', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="role-badge role-member">MEMBER</span>
+                    <span style={{ color: '#666', fontSize: '14px', fontWeight: 'normal' }}>({memberEvents.length} event{memberEvents.length !== 1 ? 's' : ''})</span>
+                  </h4>
+                  <div className="events-grid">
+                    {memberEvents.map(event => (
+                      <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
+                        <h4>{event.name}</h4>
+                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                        <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
+                          <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
+                            {event.myTokens} 🪙
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <div style={{ marginTop: '40px' }}>
