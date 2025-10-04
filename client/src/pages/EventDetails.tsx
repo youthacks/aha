@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventsService, EventMember, Purchasable, Transaction, GlobalTransaction } from '../services/events.service';
 
@@ -46,21 +46,7 @@ const EventDetails: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-  useEffect(() => {
-    if (eventId) {
-      loadEventData();
-
-      // Set up polling to refresh data every 3 seconds
-      const interval = setInterval(() => {
-        loadEventData(true); // silent refresh
-      }, 3000);
-
-      // Cleanup interval on unmount
-      return () => clearInterval(interval);
-    }
-  }, [eventId]);
-
-  const loadEventData = async (silent = false) => {
+  const loadEventData = useCallback(async (silent = false) => {
     try {
       const data = await eventsService.getEventDetails(eventId!);
       setEvent(data.event);
@@ -90,7 +76,21 @@ const EventDetails: React.FC = () => {
         setLoading(false);
       }
     }
-  };
+  }, [eventId]);
+
+  useEffect(() => {
+    if (eventId) {
+      loadEventData();
+
+      // Set up polling to refresh data every 3 seconds
+      const interval = setInterval(() => {
+        loadEventData(true); // silent refresh
+      }, 3000);
+
+      // Cleanup interval on unmount
+      return () => clearInterval(interval);
+    }
+  }, [eventId, loadEventData]);
 
   const handleUpdateTokens = async (e: React.FormEvent) => {
     e.preventDefault();

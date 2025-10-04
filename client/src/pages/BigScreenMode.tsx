@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventsService, Purchasable } from '../services/events.service';
 import '../styles/BigScreenMode.css';
@@ -9,6 +9,15 @@ const BigScreenMode: React.FC = () => {
   const [purchasables, setPurchasables] = useState<Purchasable[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
+  const loadPurchasables = useCallback(async () => {
+    try {
+      const data = await eventsService.getEventDetails(eventId!);
+      setPurchasables(data.stations);
+    } catch (err) {
+      console.error('Failed to load purchasables', err);
+    }
+  }, [eventId]);
+
   useEffect(() => {
     loadPurchasables();
     
@@ -18,16 +27,7 @@ const BigScreenMode: React.FC = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [eventId]);
-
-  const loadPurchasables = async () => {
-    try {
-      const data = await eventsService.getEventDetails(eventId!);
-      setPurchasables(data.stations);
-    } catch (err) {
-      console.error('Failed to load purchasables', err);
-    }
-  };
+  }, [loadPurchasables]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -49,8 +49,10 @@ const BigScreenMode: React.FC = () => {
   }, []);
 
   const availableItems = purchasables.filter(p => p.isAvailable && p.stock > 0);
-  
-  if (availableItems.length === 0) {
+  const soldOutItems = purchasables.filter(p => p.isAvailable && p.stock === 0);
+  const allDisplayItems = [...availableItems, ...soldOutItems];
+
+  if (allDisplayItems.length === 0) {
     return (
       <div className="bigscreen-container">
         <div className="bigscreen-empty">
@@ -72,8 +74,13 @@ const BigScreenMode: React.FC = () => {
   return (
     <div className="bigscreen-container">
       <div className="bigscreen-grid">
-        {availableItems.map((item) => (
+        {allDisplayItems.map((item) => (
           <div key={item.id} className="bigscreen-grid-item">
+            {item.stock === 0 && (
+              <div className="bigscreen-sold-out-overlay">
+                <div className="bigscreen-sold-out-text">SOLD OUT</div>
+              </div>
+            )}
             <div className="bigscreen-grid-image-container">
               {item.imageUrl ? (
                 <img
