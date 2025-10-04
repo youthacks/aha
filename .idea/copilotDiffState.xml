@@ -11,6 +11,14 @@
             </PendingDiffInfo>
           </value>
         </entry>
+        <entry key="$PROJECT_DIR$/EMAIL_CONFIG.md">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/EMAIL_CONFIG.md" />
+              <option name="updatedContent" value="# Email Configuration Notes&#10;&#10;## Current Setup&#10;&#10;The backend sends verification and password reset emails with links that point to:&#10;`http://192.168.1.198:3001`&#10;&#10;This is configured in the `.env` file as `APP_URL`.&#10;&#10;## Why This Works&#10;&#10;- ✅ **Web App**: Works because you can access it at `http://192.168.1.198:3001` from any device on your network&#10;- ✅ **Mobile App**: The mobile app will handle the deep linking when you click email links on your phone&#10;&#10;## Important Notes&#10;&#10;1. **Web App Access**: If you want to access the web app from your phone's browser, use:&#10;   ```&#10;   http://192.168.1.198:3001&#10;   ```&#10;   Instead of `http://localhost:3001`&#10;&#10;2. **Email Links on Mobile**: When you click a verification link in the email on your phone:&#10;   - It will try to open in the browser first&#10;   - You can manually trigger the verification in the mobile app by copying the email and token from the URL&#10;&#10;## Alternative: Deep Linking (Future Enhancement)&#10;&#10;For a better mobile experience, you could configure deep linking so email links automatically open in the mobile app. This requires:&#10;1. Configuring Expo deep links&#10;2. Updating the email service to detect mobile users&#10;3. Sending different links for mobile vs web&#10;&#10;For now, the current setup works for both platforms when on the same network.&#10;&#10;## If Your IP Changes&#10;&#10;Remember to update `APP_URL` in `.env` if your computer's IP address changes:&#10;1. Run `ipconfig` to get your new IP&#10;2. Update `.env`: `APP_URL=http://YOUR_NEW_IP:3001`&#10;3. Restart the backend server&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
       </map>
     </option>
   </component>
