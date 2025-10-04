@@ -11,22 +11,22 @@ export class EventsController {
 
   @Post()
   async createEvent(@Request() req, @Body() createEventDto: CreateEventDto) {
-    return this.eventsService.createEvent(req.user.userId, createEventDto);
+    return this.eventsService.createEvent(req.user.id, createEventDto);
   }
 
   @Post('join')
   async joinEvent(@Request() req, @Body() joinEventDto: JoinEventDto) {
-    return this.eventsService.joinEvent(req.user.userId, joinEventDto);
+    return this.eventsService.joinEvent(req.user.id, joinEventDto);
   }
 
   @Get('my-events')
   async getMyEvents(@Request() req) {
-    return this.eventsService.getMyEvents(req.user.userId);
+    return this.eventsService.getMyEvents(req.user.id);
   }
 
   @Get(':eventId')
   async getEventDetails(@Param('eventId') eventId: string, @Request() req) {
-    return this.eventsService.getEventDetails(eventId, req.user.userId);
+    return this.eventsService.getEventDetails(eventId, req.user.id);
   }
 
   @Put(':eventId/tokens')
@@ -35,7 +35,7 @@ export class EventsController {
     @Request() req,
     @Body() updateDto: UpdateTokensDto,
   ) {
-    return this.eventsService.updateTokens(eventId, req.user.userId, updateDto);
+    return this.eventsService.updateTokens(eventId, req.user.id, updateDto);
   }
 
   @Put(':eventId/promote')
@@ -44,7 +44,7 @@ export class EventsController {
     @Request() req,
     @Body() promoteDto: PromoteMemberDto,
   ) {
-    return this.eventsService.promoteMember(eventId, req.user.userId, promoteDto);
+    return this.eventsService.promoteMember(eventId, req.user.id, promoteDto);
   }
 
   @Post(':eventId/stations')
@@ -53,7 +53,7 @@ export class EventsController {
     @Request() req,
     @Body() createDto: CreateStationDto,
   ) {
-    return this.eventsService.createStation(eventId, req.user.userId, createDto);
+    return this.eventsService.createStation(eventId, req.user.id, createDto);
   }
 
   @Post(':eventId/purchase')
@@ -62,17 +62,17 @@ export class EventsController {
     @Request() req,
     @Body() purchaseDto: PurchaseDto,
   ) {
-    return this.eventsService.purchase(eventId, req.user.userId, purchaseDto);
+    return this.eventsService.purchase(eventId, req.user.id, purchaseDto);
   }
 
   @Get(':eventId/transactions')
   async getTransactions(@Param('eventId') eventId: string, @Request() req) {
-    return this.eventsService.getTransactions(eventId, req.user.userId);
+    return this.eventsService.getTransactions(eventId, req.user.id);
   }
 
   @Delete(':eventId')
   async deleteEvent(@Param('eventId') eventId: string, @Request() req) {
-    await this.eventsService.deleteEvent(eventId, req.user.userId);
+    await this.eventsService.deleteEvent(eventId, req.user.id);
     return { message: 'Event deleted successfully' };
   }
 }
