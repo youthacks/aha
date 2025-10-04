@@ -160,6 +160,11 @@ export class EventsService {
       throw new NotFoundException('Member not found in this event');
     }
 
+    // Prevent giving tokens to admins and managers
+    if (targetMember.role === EventRole.ADMIN || targetMember.role === EventRole.MANAGER) {
+      throw new BadRequestException('Cannot update tokens for admins or managers');
+    }
+
     targetMember.tokens += updateDto.amount;
 
     if (targetMember.tokens < 0) {
@@ -198,7 +203,16 @@ export class EventsService {
       throw new BadRequestException('Invalid role');
     }
 
-    targetMember.role = promoteDto.role as EventRole;
+    const oldRole = targetMember.role;
+    const newRole = promoteDto.role as EventRole;
+
+    // If promoting to admin or manager, reset tokens to 0
+    if ((newRole === EventRole.ADMIN || newRole === EventRole.MANAGER) &&
+        (oldRole !== EventRole.ADMIN && oldRole !== EventRole.MANAGER)) {
+      targetMember.tokens = 0;
+    }
+
+    targetMember.role = newRole;
     return this.membersRepository.save(targetMember);
   }
 
@@ -226,6 +240,11 @@ export class EventsService {
 
     if (!member) {
       throw new ForbiddenException('Not a member of this event');
+    }
+
+    // Prevent admins and managers from purchasing
+    if (member.role === EventRole.ADMIN || member.role === EventRole.MANAGER) {
+      throw new BadRequestException('Admins and managers cannot make purchases');
     }
 
     const station = await this.purchasablesRepository.findOne({

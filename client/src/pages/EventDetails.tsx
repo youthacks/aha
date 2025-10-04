@@ -155,6 +155,7 @@ const EventDetails: React.FC = () => {
 
   const canManage = myRole === 'admin' || myRole === 'manager';
   const isAdmin = myRole === 'admin';
+  const isRegularMember = myRole === 'member';
 
   return (
     <div className="dashboard-container">
@@ -202,15 +203,17 @@ const EventDetails: React.FC = () => {
                   <div className="stat-value">{purchasables.length}</div>
                   <div className="stat-label">Purchasables</div>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-value">{myTokens}</div>
-                  <div className="stat-label">My Tokens</div>
-                </div>
+                {isRegularMember && (
+                  <div className="stat-card">
+                    <div className="stat-value">{myTokens}</div>
+                    <div className="stat-label">My Tokens</div>
+                  </div>
+                )}
               </div>
 
               <h3 style={{ marginTop: '30px', marginBottom: '15px' }}>Leaderboard</h3>
               <div className="leaderboard">
-                {members.slice(0, 10).map((member, index) => (
+                {members.filter(m => m.role === 'member').slice(0, 10).map((member, index) => (
                   <div key={member.id} className="leaderboard-item">
                     <div className="leaderboard-rank">#{index + 1}</div>
                     <div className="leaderboard-info">
@@ -283,7 +286,7 @@ const EventDetails: React.FC = () => {
                       {station.description && <p className="station-description">{station.description}</p>}
                       <div className="station-footer">
                         <div className="station-price">{station.price} 🪙</div>
-                        {station.isAvailable && (
+                        {station.isAvailable && isRegularMember && (
                           <button
                             onClick={() => handlePurchase(station.id, station.name)}
                             className="btn-purchase"
@@ -291,6 +294,11 @@ const EventDetails: React.FC = () => {
                           >
                             {myTokens < station.price ? 'Insufficient Tokens' : 'Purchase'}
                           </button>
+                        )}
+                        {!isRegularMember && (
+                          <span style={{ fontSize: '12px', color: '#999', fontStyle: 'italic' }}>
+                            Members only
+                          </span>
                         )}
                       </div>
                     </div>
