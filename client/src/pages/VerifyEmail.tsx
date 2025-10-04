@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const hasVerified = React.useRef(false);
 
   useEffect(() => {
     const email = searchParams.get('email');
     const token = searchParams.get('token');
+
+    console.log('🔗 URL Parameters received:', { email, token, tokenLength: token?.length });
 
     if (!email || !token) {
       setStatus('error');
@@ -20,17 +21,38 @@ const VerifyEmail: React.FC = () => {
       return;
     }
 
+    // Prevent duplicate verification attempts in StrictMode
+    if (hasVerified.current) {
+      console.log('⏭️ Skipping duplicate verification attempt');
+      return;
+    }
+
     const verifyEmail = async () => {
       try {
+        hasVerified.current = true;
+        console.log('🚀 Calling verifyEmail API...');
         const response = await authService.verifyEmail(email, token);
+
+        console.log('✅ API call successful!', response);
+        // If we got here, verification was successful
         setStatus('success');
         setMessage(response.message || 'Email verified successfully!');
 
-        // Wait a moment, then redirect to login page instead of dashboard
-        setTimeout(() => navigate('/login'), 2000);
+        // Wait a moment, then redirect to dashboard (user is auto-logged in via authService)
+        setTimeout(() => navigate('/dashboard'), 2000);
       } catch (err: any) {
-        setStatus('error');
-        setMessage(err.response?.data?.message || 'Verification failed');
+        console.error('❌ Verification error:', err);
+        console.error('Error response:', err.response?.data);
+
+        // Check if the error is because email is already verified
+        if (err.response?.data?.message === 'Email already verified') {
+          setStatus('success');
+          setMessage('Email already verified! Redirecting to login...');
+          setTimeout(() => navigate('/login'), 2000);
+        } else {
+          setStatus('error');
+          setMessage(err.response?.data?.message || 'Verification failed');
+        }
       }
     };
 
@@ -53,7 +75,7 @@ const VerifyEmail: React.FC = () => {
         {status === 'success' && (
           <div className="alert alert-success">
             {message}
-            <p style={{ marginTop: '10px' }}>Redirecting to login page...</p>
+            <p style={{ marginTop: '10px' }}>Redirecting to dashboard...</p>
           </div>
         )}
 
