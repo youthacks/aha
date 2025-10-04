@@ -102,12 +102,30 @@ export class EventsService {
       relations: ['event'],
     });
 
-    return members.map(member => ({
-      ...member.event,
-      myRole: member.role,
-      myTokens: member.tokens,
-      membershipId: member.id,
-    }));
+    return members
+      .filter(member => !member.event.isArchived) // Filter out archived events
+      .map(member => ({
+        ...member.event,
+        myRole: member.role,
+        myTokens: member.tokens,
+        membershipId: member.id,
+      }));
+  }
+
+  async getMyArchivedEvents(userId: string): Promise<any[]> {
+    const members = await this.membersRepository.find({
+      where: { userId },
+      relations: ['event'],
+    });
+
+    return members
+      .filter(member => member.event.isArchived) // Only archived events
+      .map(member => ({
+        ...member.event,
+        myRole: member.role,
+        myTokens: member.tokens,
+        membershipId: member.id,
+      }));
   }
 
   async getEventDetails(eventId: string, userId: string): Promise<any> {
@@ -508,6 +526,74 @@ export class EventsService {
     }
 
     return this.getAllTransactions(event.id, userId);
+  }
+
+  async archiveEvent(eventId: string, userId: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    // Only the owner (admin) can archive the event
+    const membership = await this.membersRepository.findOne({
+      where: { eventId, userId },
+    });
+
+    if (!membership || membership.role !== EventRole.ADMIN) {
+      throw new ForbiddenException('Only the event admin can archive this event');
+    }
+
+    event.isArchived = true;
+    return this.eventsRepository.save(event);
+  }
+
+  async unarchiveEvent(eventId: string, userId: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    // Only the owner (admin) can unarchive the event
+    const membership = await this.membersRepository.findOne({
+      where: { eventId, userId },
+    });
+
+    if (!membership || membership.role !== EventRole.ADMIN) {
+      throw new ForbiddenException('Only the event admin can unarchive this event');
+    }
+
+    event.isArchived = false;
+    return this.eventsRepository.save(event);
+  }
+
+  async archiveEventBySlug(eventSlug: string, userId: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.archiveEvent(event.id, userId);
+  }
+
+  async unarchiveEventBySlug(eventSlug: string, userId: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.unarchiveEvent(event.id, userId);
   }
 
   async deleteEventBySlug(eventSlug: string, userId: string): Promise<void> {

@@ -24,6 +24,11 @@ export class EventsController {
     return this.eventsService.getMyEvents(req.user.id);
   }
 
+  @Get('my-events/archived')
+  async getMyArchivedEvents(@Request() req) {
+    return this.eventsService.getMyArchivedEvents(req.user.id);
+  }
+
   @Get(':eventSlug')
   async getEventDetails(@Param('eventSlug') eventSlug: string, @Request() req) {
     return this.eventsService.getEventDetailsBySlug(eventSlug, req.user.id);
@@ -93,6 +98,18 @@ export class EventsController {
   @Get(':eventSlug/transactions/all')
   async getAllTransactions(@Param('eventSlug') eventSlug: string, @Request() req) {
     return this.eventsService.getAllTransactionsBySlug(eventSlug, req.user.id);
+  }
+
+  @Put(':eventSlug/archive')
+  async archiveEvent(@Param('eventSlug') eventSlug: string, @Request() req) {
+    await this.eventsService.archiveEventBySlug(eventSlug, req.user.id);
+    return { message: 'Event archived successfully' };
+  }
+
+  @Put(':eventSlug/unarchive')
+  async unarchiveEvent(@Param('eventSlug') eventSlug: string, @Request() req) {
+    await this.eventsService.unarchiveEventBySlug(eventSlug, req.user.id);
+    return { message: 'Event unarchived successfully' };
   }
 
   @Delete(':eventSlug')

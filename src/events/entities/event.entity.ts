@@ -28,6 +28,9 @@ export class Event {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ default: false })
+  isArchived: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

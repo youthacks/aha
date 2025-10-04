@@ -214,6 +214,34 @@ const EventDetails: React.FC = () => {
     }
   };
 
+  const handleArchiveEvent = async () => {
+    if (!window.confirm(`Archive "${event.name}"? It will be moved to your archived events.`)) return;
+
+    try {
+      await eventsService.archiveEvent(eventId!);
+      setSuccess('Event archived successfully. Redirecting...');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to archive event');
+    }
+  };
+
+  const handleUnarchiveEvent = async () => {
+    if (!window.confirm(`Unarchive "${event.name}"? It will be moved back to your active events.`)) return;
+
+    try {
+      await eventsService.unarchiveEvent(eventId!);
+      setSuccess('Event unarchived successfully. Redirecting...');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to unarchive event');
+    }
+  };
+
   const openTokenModal = (member: EventMember) => {
     setSelectedMember(member);
     setTokenAmount(0);
@@ -535,6 +563,50 @@ const EventDetails: React.FC = () => {
           <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid #e0e0e0' }}>
             <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Danger Zone</h3>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+              Manage this event's lifecycle. Archived events are hidden from your main dashboard but can be restored later.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+              {!event.isArchived ? (
+                <button
+                  onClick={handleArchiveEvent}
+                  style={{
+                    background: '#f59e0b',
+                    color: 'white',
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#d97706'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#f59e0b'}
+                >
+                  📦 Archive Event
+                </button>
+              ) : (
+                <button
+                  onClick={handleUnarchiveEvent}
+                  style={{
+                    background: '#10b981',
+                    color: 'white',
+                    padding: '12px 24px',
+                    borderRadius: '10px',
+                    border: 'none',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#059669'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#10b981'}
+                >
+                  📤 Unarchive Event
+                </button>
+              )}
+            </div>
+            <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px', marginTop: '20px' }}>
               Once you delete this event, all members, tokens, purchasables, and transaction history will be permanently removed. This action cannot be undone.
             </p>
             <button

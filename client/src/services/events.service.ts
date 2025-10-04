@@ -9,6 +9,7 @@ export interface Event {
   myRole?: string;
   myTokens?: number;
   isActive: boolean;
+  isArchived: boolean;
   createdAt: string;
 }
 
@@ -67,6 +68,11 @@ export const eventsService = {
     return response.data;
   },
 
+  getMyArchivedEvents: async (): Promise<Event[]> => {
+    const response = await api.get('/events/my-events/archived');
+    return response.data;
+  },
+
   getEventDetails: async (eventSlug: string) => {
     const response = await api.get(`/events/${eventSlug}`);
     return response.data;
@@ -109,6 +115,16 @@ export const eventsService = {
 
   getAllTransactions: async (eventSlug: string): Promise<GlobalTransaction[]> => {
     const response = await api.get(`/events/${eventSlug}/transactions/all`);
+    return response.data;
+  },
+
+  archiveEvent: async (eventSlug: string) => {
+    const response = await api.put(`/events/${eventSlug}/archive`);
+    return response.data;
+  },
+
+  unarchiveEvent: async (eventSlug: string) => {
+    const response = await api.put(`/events/${eventSlug}/unarchive`);
     return response.data;
   },
 

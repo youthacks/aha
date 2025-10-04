@@ -298,6 +298,35 @@ code {
   box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
 }
 
+.archived-event-card {
+  opacity: 0.7;
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.archived-event-card:hover {
+  opacity: 1;
+  border-color: #9ca3af;
+  box-shadow: 0 10px 30px rgba(156, 163, 175, 0.2);
+}
+
+.btn-toggle-archived {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-toggle-archived:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
 .event-card h4 {
   color: #333;
   font-size: 18px;

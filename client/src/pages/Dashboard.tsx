@@ -10,6 +10,8 @@ const Dashboard: React.FC = () => {
   const [resendMessage, setResendMessage] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
+  const [archivedEvents, setArchivedEvents] = useState<Event[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -27,6 +29,8 @@ const Dashboard: React.FC = () => {
     try {
       const data = await eventsService.getMyEvents();
       setEvents(data);
+      const archivedData = await eventsService.getMyArchivedEvents();
+      setArchivedEvents(archivedData);
     } catch (err) {
       console.error('Failed to load events', err);
     } finally {
@@ -173,6 +177,38 @@ const Dashboard: React.FC = () => {
               ))}
             </div>
           )}
+
+          <div style={{ marginTop: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ color: '#333' }}>Archived Events</h3>
+              <button onClick={() => setShowArchived(!showArchived)} className="btn-toggle-archived">
+                {showArchived ? 'Hide' : 'Show'} Archived Events
+              </button>
+            </div>
+
+            {showArchived && (
+              <div className="events-grid">
+                {archivedEvents.length === 0 ? (
+                  <div style={{ textAlign: 'center', width: '100%', padding: '20px', background: '#f9f9f9', borderRadius: '10px' }}>
+                    <p style={{ color: '#666' }}>No archived events found.</p>
+                  </div>
+                ) : (
+                  archivedEvents.map(event => (
+                    <div key={event.id} className="event-card archived-event-card" onClick={() => navigate(`/events/${event.slug}`)}>
+                      <h4>{event.name}</h4>
+                      <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                      <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
+                        <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
+                          {event.myTokens} 🪙
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
