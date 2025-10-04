@@ -146,6 +146,7 @@ export class EventsService {
   async updateTokens(eventId: string, adminId: string, updateDto: UpdateTokensDto): Promise<EventMember> {
     const adminMember = await this.membersRepository.findOne({
       where: { eventId, userId: adminId },
+      relations: ['user'],
     });
 
     if (!adminMember || (adminMember.role !== EventRole.ADMIN && adminMember.role !== EventRole.MANAGER)) {
@@ -154,6 +155,7 @@ export class EventsService {
 
     const targetMember = await this.membersRepository.findOne({
       where: { eventId, userId: updateDto.userId },
+      relations: ['user'],
     });
 
     if (!targetMember) {
@@ -171,12 +173,15 @@ export class EventsService {
       targetMember.tokens = 0;
     }
 
+    const adminName = `${adminMember.user.firstName} ${adminMember.user.lastName}`;
+    const targetName = `${targetMember.user.firstName} ${targetMember.user.lastName}`;
+
     await this.transactionsRepository.save({
       eventId,
       userId: updateDto.userId,
       amount: updateDto.amount,
       type: updateDto.amount > 0 ? 'credit' : 'debit',
-      description: `Token adjustment by ${adminMember.role}`,
+      description: `${adminName} ${updateDto.amount > 0 ? 'gave' : 'removed'} ${Math.abs(updateDto.amount)} tokens ${updateDto.amount > 0 ? 'to' : 'from'} ${targetName}`,
     });
 
     return this.membersRepository.save(targetMember);
@@ -292,6 +297,39 @@ export class EventsService {
       order: { createdAt: 'DESC' },
       take: 50,
     });
+  }
+
+  async getAllTransactions(eventId: string, userId: string): Promise<any[]> {
+    const member = await this.membersRepository.findOne({
+      where: { eventId, userId },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('Not a member of this event');
+    }
+
+    // Only admins and managers can view all transactions
+    if (member.role !== EventRole.ADMIN && member.role !== EventRole.MANAGER) {
+      throw new ForbiddenException('Only admins and managers can view global transaction history');
+    }
+
+    const transactions = await this.transactionsRepository.find({
+      where: { eventId },
+      relations: ['user', 'station'],
+      order: { createdAt: 'DESC' },
+      take: 100,
+    });
+
+    return transactions.map(txn => ({
+      id: txn.id,
+      userId: txn.userId,
+      userName: `${txn.user.firstName} ${txn.user.lastName}`,
+      amount: txn.amount,
+      type: txn.type,
+      description: txn.description,
+      stationName: txn.station?.name || null,
+      createdAt: txn.createdAt,
+    }));
   }
 
   async deleteAll(): Promise<void> {

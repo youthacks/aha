@@ -70,6 +70,11 @@ export class EventsController {
     return this.eventsService.getTransactions(eventId, req.user.id);
   }
 
+  @Get(':eventId/transactions/all')
+  async getAllTransactions(@Param('eventId') eventId: string, @Request() req) {
+    return this.eventsService.getAllTransactions(eventId, req.user.id);
+  }
+
   @Delete(':eventId')
   async deleteEvent(@Param('eventId') eventId: string, @Request() req) {
     await this.eventsService.deleteEvent(eventId, req.user.id);

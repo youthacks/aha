@@ -38,6 +38,17 @@ export interface Transaction {
   createdAt: string;
 }
 
+export interface GlobalTransaction {
+  id: string;
+  userId: string;
+  userName: string;
+  amount: number;
+  type: string;
+  description: string;
+  stationName: string | null;
+  createdAt: string;
+}
+
 export const eventsService = {
   createEvent: async (name: string, description?: string) => {
     const response = await api.post('/events', { name, description });
@@ -81,6 +92,11 @@ export const eventsService = {
 
   getTransactions: async (eventId: string): Promise<Transaction[]> => {
     const response = await api.get(`/events/${eventId}/transactions`);
+    return response.data;
+  },
+
+  getAllTransactions: async (eventId: string): Promise<GlobalTransaction[]> => {
+    const response = await api.get(`/events/${eventId}/transactions/all`);
     return response.data;
   },
 

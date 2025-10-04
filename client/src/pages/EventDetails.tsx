@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { eventsService, EventMember, Purchasable, Transaction } from '../services/events.service';
+import { eventsService, EventMember, Purchasable, Transaction, GlobalTransaction } from '../services/events.service';
 
 const EventDetails: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -9,6 +9,7 @@ const EventDetails: React.FC = () => {
   const [members, setMembers] = useState<EventMember[]>([]);
   const [purchasables, setPurchasables] = useState<Purchasable[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [globalTransactions, setGlobalTransactions] = useState<GlobalTransaction[]>([]);
   const [myRole, setMyRole] = useState('');
   const [myTokens, setMyTokens] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -56,6 +57,16 @@ const EventDetails: React.FC = () => {
 
       const txns = await eventsService.getTransactions(eventId!);
       setTransactions(txns);
+
+      // Load global transactions if user is admin or manager
+      if (data.myRole === 'admin' || data.myRole === 'manager') {
+        try {
+          const allTxns = await eventsService.getAllTransactions(eventId!);
+          setGlobalTransactions(allTxns);
+        } catch (err) {
+          // Silently fail if user doesn't have permission
+        }
+      }
     } catch (err: any) {
       if (!silent) {
         setError(err.response?.data?.message || 'Failed to load event');
@@ -198,6 +209,11 @@ const EventDetails: React.FC = () => {
           <button className={activeTab === 'stations' ? 'tab active' : 'tab'} onClick={() => setActiveTab('stations')}>
             Purchasables ({purchasables.length})
           </button>
+          {canManage && (
+            <button className={activeTab === 'global-history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('global-history')}>
+              Global History
+            </button>
+          )}
           <button className={activeTab === 'history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('history')}>
             My History
           </button>
@@ -333,6 +349,49 @@ const EventDetails: React.FC = () => {
                     <div key={txn.id} className="transaction-item">
                       <div>
                         <div className="transaction-description">{txn.description}</div>
+                        <div className="transaction-date">{new Date(txn.createdAt).toLocaleString()}</div>
+                      </div>
+                      <div className={`transaction-amount ${txn.amount > 0 ? 'positive' : 'negative'}`}>
+                        {txn.amount > 0 ? '+' : ''}{txn.amount} 🪙
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'global-history' && canManage && (
+            <div>
+              <h3 style={{ marginBottom: '15px' }}>📊 Global Transaction History</h3>
+              <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+                View all transactions across all members in this event
+              </p>
+              {globalTransactions.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', background: '#f9f9f9', borderRadius: '10px' }}>
+                  <p style={{ color: '#666' }}>No transactions yet.</p>
+                </div>
+              ) : (
+                <div className="transactions-list">
+                  {globalTransactions.map(txn => (
+                    <div key={txn.id} className="transaction-item">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+                          <span style={{ fontWeight: '600', color: '#333' }}>{txn.userName}</span>
+                          <span style={{
+                            fontSize: '11px',
+                            background: txn.type === 'purchase' ? '#fef3c7' : txn.amount > 0 ? '#d1fae5' : '#fee2e2',
+                            color: txn.type === 'purchase' ? '#92400e' : txn.amount > 0 ? '#065f46' : '#991b1b',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}>
+                            {txn.type === 'purchase' ? '🛒 PURCHASE' : txn.amount > 0 ? '➕ CREDIT' : '➖ DEBIT'}
+                          </span>
+                        </div>
+                        <div className="transaction-description">
+                          {txn.stationName ? `Purchased: ${txn.stationName}` : txn.description}
+                        </div>
                         <div className="transaction-date">{new Date(txn.createdAt).toLocaleString()}</div>
                       </div>
                       <div className={`transaction-amount ${txn.amount > 0 ? 'positive' : 'negative'}`}>
