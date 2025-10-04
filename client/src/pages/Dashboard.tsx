@@ -160,9 +160,9 @@ const Dashboard: React.FC = () => {
           ) : (
             <div className="events-grid">
               {events.map(event => (
-                <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.id}`)}>
+                <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                   <h4>{event.name}</h4>
-                  <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Code: <strong>{event.slug}</strong></p>
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
                   <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
                     <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>

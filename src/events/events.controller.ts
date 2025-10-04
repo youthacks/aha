@@ -24,80 +24,80 @@ export class EventsController {
     return this.eventsService.getMyEvents(req.user.id);
   }
 
-  @Get(':eventId')
-  async getEventDetails(@Param('eventId') eventId: string, @Request() req) {
-    return this.eventsService.getEventDetails(eventId, req.user.id);
+  @Get(':eventSlug')
+  async getEventDetails(@Param('eventSlug') eventSlug: string, @Request() req) {
+    return this.eventsService.getEventDetailsBySlug(eventSlug, req.user.id);
   }
 
-  @Put(':eventId/tokens')
+  @Put(':eventSlug/tokens')
   async updateTokens(
-    @Param('eventId') eventId: string,
+    @Param('eventSlug') eventSlug: string,
     @Request() req,
     @Body() updateDto: UpdateTokensDto,
   ) {
-    return this.eventsService.updateTokens(eventId, req.user.id, updateDto);
+    return this.eventsService.updateTokensBySlug(eventSlug, req.user.id, updateDto);
   }
 
-  @Put(':eventId/promote')
+  @Put(':eventSlug/promote')
   async promoteMember(
-    @Param('eventId') eventId: string,
+    @Param('eventSlug') eventSlug: string,
     @Request() req,
     @Body() promoteDto: PromoteMemberDto,
   ) {
-    return this.eventsService.promoteMember(eventId, req.user.id, promoteDto);
+    return this.eventsService.promoteMemberBySlug(eventSlug, req.user.id, promoteDto);
   }
 
-  @Post(':eventId/stations')
+  @Post(':eventSlug/stations')
   async createStation(
-    @Param('eventId') eventId: string,
+    @Param('eventSlug') eventSlug: string,
     @Request() req,
     @Body() createDto: CreateStationDto,
   ) {
-    return this.eventsService.createStation(eventId, req.user.id, createDto);
+    return this.eventsService.createStationBySlug(eventSlug, req.user.id, createDto);
   }
 
-  @Put(':eventId/stations/:stationId')
+  @Put(':eventSlug/stations/:stationId')
   async updateStation(
-    @Param('eventId') eventId: string,
+    @Param('eventSlug') eventSlug: string,
     @Param('stationId') stationId: string,
     @Request() req,
     @Body() updateDto: UpdateStationDto,
   ) {
-    return this.eventsService.updateStation(eventId, stationId, req.user.id, updateDto);
+    return this.eventsService.updateStationBySlug(eventSlug, stationId, req.user.id, updateDto);
   }
 
-  @Delete(':eventId/stations/:stationId')
+  @Delete(':eventSlug/stations/:stationId')
   async deleteStation(
-    @Param('eventId') eventId: string,
+    @Param('eventSlug') eventSlug: string,
     @Param('stationId') stationId: string,
     @Request() req,
   ) {
-    await this.eventsService.deleteStation(eventId, stationId, req.user.id);
+    await this.eventsService.deleteStationBySlug(eventSlug, stationId, req.user.id);
     return { message: 'Station deleted successfully' };
   }
 
-  @Post(':eventId/purchase')
+  @Post(':eventSlug/purchase')
   async purchase(
-    @Param('eventId') eventId: string,
+    @Param('eventSlug') eventSlug: string,
     @Request() req,
     @Body() purchaseDto: PurchaseDto,
   ) {
-    return this.eventsService.purchase(eventId, req.user.id, purchaseDto);
+    return this.eventsService.purchaseBySlug(eventSlug, req.user.id, purchaseDto);
   }
 
-  @Get(':eventId/transactions')
-  async getTransactions(@Param('eventId') eventId: string, @Request() req) {
-    return this.eventsService.getTransactions(eventId, req.user.id);
+  @Get(':eventSlug/transactions')
+  async getTransactions(@Param('eventSlug') eventSlug: string, @Request() req) {
+    return this.eventsService.getTransactionsBySlug(eventSlug, req.user.id);
   }
 
-  @Get(':eventId/transactions/all')
-  async getAllTransactions(@Param('eventId') eventId: string, @Request() req) {
-    return this.eventsService.getAllTransactions(eventId, req.user.id);
+  @Get(':eventSlug/transactions/all')
+  async getAllTransactions(@Param('eventSlug') eventSlug: string, @Request() req) {
+    return this.eventsService.getAllTransactionsBySlug(eventSlug, req.user.id);
   }
 
-  @Delete(':eventId')
-  async deleteEvent(@Param('eventId') eventId: string, @Request() req) {
-    await this.eventsService.deleteEvent(eventId, req.user.id);
+  @Delete(':eventSlug')
+  async deleteEvent(@Param('eventSlug') eventSlug: string, @Request() req) {
+    await this.eventsService.deleteEventBySlug(eventSlug, req.user.id);
     return { message: 'Event deleted successfully' };
   }
 }

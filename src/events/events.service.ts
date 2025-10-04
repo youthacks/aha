@@ -401,6 +401,127 @@ export class EventsService {
     }));
   }
 
+  async getEventDetailsBySlug(eventSlug: string, userId: string): Promise<any> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+      relations: ['owner'],
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.getEventDetails(event.id, userId);
+  }
+
+  async updateTokensBySlug(eventSlug: string, adminId: string, updateDto: UpdateTokensDto): Promise<EventMember> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.updateTokens(event.id, adminId, updateDto);
+  }
+
+  async promoteMemberBySlug(eventSlug: string, adminId: string, promoteDto: PromoteMemberDto): Promise<EventMember> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.promoteMember(event.id, adminId, promoteDto);
+  }
+
+  async createStationBySlug(eventSlug: string, userId: string, createDto: CreateStationDto): Promise<Purchasable> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.createStation(event.id, userId, createDto);
+  }
+
+  async updateStationBySlug(eventSlug: string, stationId: string, userId: string, updateDto: UpdateStationDto): Promise<Purchasable> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.updateStation(event.id, stationId, userId, updateDto);
+  }
+
+  async deleteStationBySlug(eventSlug: string, stationId: string, userId: string): Promise<void> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.deleteStation(event.id, stationId, userId);
+  }
+
+  async purchaseBySlug(eventSlug: string, userId: string, purchaseDto: PurchaseDto): Promise<Transaction> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.purchase(event.id, userId, purchaseDto);
+  }
+
+  async getTransactionsBySlug(eventSlug: string, userId: string): Promise<Transaction[]> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.getTransactions(event.id, userId);
+  }
+
+  async getAllTransactionsBySlug(eventSlug: string, userId: string): Promise<any[]> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.getAllTransactions(event.id, userId);
+  }
+
+  async deleteEventBySlug(eventSlug: string, userId: string): Promise<void> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.deleteEvent(event.id, userId);
+  }
+
   async deleteAll(): Promise<void> {
     await this.transactionsRepository.clear();
     await this.purchasablesRepository.clear();

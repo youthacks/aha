@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/DELETE_DATA_COMMANDS.md">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/DELETE_DATA_COMMANDS.md" />
+              <option name="updatedContent" value="# Quick Commands - Delete All Data&#10;&#10;## Delete All User Accounts&#10;&#10;**PowerShell:**&#10;```powershell&#10;Invoke-RestMethod -Uri &quot;http://localhost:3000/users/clear-all&quot; -Method DELETE&#10;```&#10;&#10;**Output:**&#10;```json&#10;{&#10;  &quot;message&quot;: &quot;Successfully deleted X user(s)&quot;,&#10;  &quot;success&quot;: true&#10;}&#10;```&#10;&#10;---&#10;&#10;## List All Users (Before Deleting)&#10;&#10;**PowerShell:**&#10;```powershell&#10;Invoke-RestMethod -Uri &quot;http://localhost:3000/users/list&quot; -Method GET&#10;```&#10;&#10;**Output:**&#10;```json&#10;{&#10;  &quot;count&quot;: 5,&#10;  &quot;users&quot;: [&#10;    { &quot;id&quot;: &quot;...&quot;, &quot;email&quot;: &quot;user@example.com&quot;, ... }&#10;  ]&#10;}&#10;```&#10;&#10;---&#10;&#10;## Delete All Events and Event Data&#10;&#10;Currently, events are tied to users through the database. When you delete all users, the events remain but become orphaned.&#10;&#10;**Option 1: Delete via SQL (Recommended)**&#10;&#10;Open pgAdmin and run:&#10;```sql&#10;DELETE FROM transactions;&#10;DELETE FROM buying_stations;&#10;DELETE FROM event_members;&#10;DELETE FROM events;&#10;```&#10;&#10;**Option 2: Delete via psql Command Line**&#10;```bash&#10;psql -U postgres -d aha_v2 -c &quot;DELETE FROM transactions; DELETE FROM buying_stations; DELETE FROM event_members; DELETE FROM events;&quot;&#10;```&#10;&#10;**Option 3: Recreate Entire Database**&#10;```bash&#10;psql -U postgres -c &quot;DROP DATABASE aha_v2; CREATE DATABASE aha_v2;&quot;&#10;```&#10;Then restart your backend server - it will recreate all tables automatically.&#10;&#10;---&#10;&#10;## Complete Reset (Everything)&#10;&#10;**Delete ALL data and start fresh:**&#10;&#10;```bash&#10;psql -U postgres -c &quot;DROP DATABASE aha_v2; CREATE DATABASE aha_v2;&quot;&#10;```&#10;&#10;Then restart backend:&#10;```bash&#10;npm run start:dev&#10;```&#10;&#10;All tables will be recreated empty.&#10;&#10;---&#10;&#10;## Notes&#10;&#10;⚠️ **Warning:** These actions are permanent and cannot be undone!&#10;&#10; **Security:** The `/users/clear-all` endpoint only works in development mode (NODE_ENV=development)&#10;&#10; **Backup:** Consider backing up your database first:&#10;```bash&#10;pg_dump -U postgres aha_v2 &gt; backup_$(date +%Y%m%d).sql&#10;```&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
