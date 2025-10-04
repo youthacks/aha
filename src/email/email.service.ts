@@ -40,7 +40,7 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>🎉 Welcome to AHA-V2!</h1>
+            <h1>🎉 Welcome to AHA - Token System!</h1>
           </div>
           <div class="content">
             <p>Hi ${firstName || 'there'},</p>
@@ -54,7 +54,7 @@ export class EmailService {
             <p>If you didn't create an account, you can safely ignore this email.</p>
           </div>
           <div class="footer">
-            <p>&copy; 2025 AHA-V2. All rights reserved.</p>
+            <p>&copy; 2025 AHA - Token System. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -72,14 +72,14 @@ This link will expire in 24 hours.
 
 If you didn't create an account, you can safely ignore this email.
 
-- AHA-V2 Team
+- AHA - Token System Team
     `;
 
     try {
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
         to: email,
-        subject: 'Verify Your Email Address - AHA-V2',
+        subject: 'Verify Your Email Address - AHA - Token System',
         text: textContent,
         html: htmlContent,
       });
