@@ -3,7 +3,7 @@ import api from './api';
 export interface Event {
   id: string;
   name: string;
-  code: string;
+  slug: string;
   description: string;
   ownerId: string;
   myRole?: string;
@@ -57,8 +57,8 @@ export const eventsService = {
     return response.data;
   },
 
-  joinEvent: async (code: string) => {
-    const response = await api.post('/events/join', { code });
+  joinEvent: async (slug: string) => {
+    const response = await api.post('/events/join', { slug });
     return response.data;
   },
 

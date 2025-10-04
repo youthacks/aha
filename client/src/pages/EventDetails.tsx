@@ -262,7 +262,7 @@ const EventDetails: React.FC = () => {
           <div>
             <button onClick={() => navigate('/dashboard')} className="back-button">← Back</button>
             <h1 style={{ marginTop: '10px' }}>{event.name}</h1>
-            <p style={{ color: '#666', fontSize: '14px' }}>Code: <strong>{event.code}</strong></p>
+            <p style={{ color: '#666', fontSize: '14px' }}>URL: <strong>{event.slug}</strong></p>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '14px', color: '#666' }}>My Tokens</div>

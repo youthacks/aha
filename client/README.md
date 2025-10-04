@@ -2,16 +2,6 @@
 
 React TypeScript frontend for the AHA-V2 authentication system.
 
-## Features
-
-✅ **User Registration** - Beautiful signup form with validation
-✅ **Email Verification** - Automatic verification via email links
-✅ **Login System** - Secure JWT-based authentication
-✅ **Protected Dashboard** - Accessible only to authenticated users
-✅ **Password Reset** - Forgot password & reset functionality
-✅ **Resend Verification** - Option to resend verification emails
-✅ **Modern UI** - Gradient design with smooth animations
-✅ **Responsive** - Works on desktop and mobile devices
 
 ## Quick Start
 
@@ -29,24 +19,6 @@ npm start
 ```
 
 The app will open at **http://localhost:3001**
-
-## Pages
-
-- **/** - Redirects to login
-- **/login** - User login page
-- **/register** - New user registration
-- **/verify-email** - Email verification handler
-- **/forgot-password** - Request password reset
-- **/reset-password** - Reset password with token
-- **/dashboard** - Protected user dashboard
-
-## Usage Flow
-
-1. **Register** a new account at `/register`
-2. **Check your email** for verification link
-3. **Click verification link** to verify your email
-4. **Login** at `/login` with your credentials
-5. **Access dashboard** to view your profile
 
 ## Technologies
 
@@ -77,6 +49,13 @@ client/src/
 ├── App.tsx                    # Main app with routing
 ├── index.tsx                  # App entry point
 └── index.css                  # Global styles
+```
+
+## Wipe Database
+To reset the database, you can use the following command in the backend directory:
+
+```bash
+node wipe-db.js
 ```
 
 ## Development

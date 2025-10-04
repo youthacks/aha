@@ -38,6 +38,18 @@ CREATE DATABASE aha_v2;
 npm run start:dev
 ```
 
+## Database Management
+
+### Wipe Database (Delete All Data)
+
+If you need to reset the database and delete all data:
+
+```bash
+node wipe-db.js
+```
+
+This will drop all tables. When you restart the backend, TypeORM will automatically recreate them with the latest schema.
+
 ## API Endpoints
 
 ### Authentication
@@ -88,6 +100,13 @@ npm run start:dev
 **GET /auth/profile** (Protected - requires JWT)
 Headers: `Authorization: Bearer <token>`
 
+### Event System
+
+Events use URL-friendly slugs based on the event name:
+- Event names must be unique
+- Event slugs are automatically generated (e.g., "My Awesome Event" → "my-awesome-event")
+- Users join events using the slug instead of a random code
+
 
 ---
 
@@ -101,9 +120,8 @@ npm run start:dev
 
 **Terminal 2 - Frontend:**
 ```bash
-cd client
-npm start
+   cd client
+   npm start
 ```
 
 Then open **http://localhost:3001** in your browser.
-

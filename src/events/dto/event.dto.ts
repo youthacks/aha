@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, MaxLength, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateEventDto {
   @IsString()
@@ -12,9 +12,8 @@ export class CreateEventDto {
 
 export class JoinEventDto {
   @IsString()
-  @MinLength(5)
-  @MaxLength(5)
-  code: string;
+  @IsNotEmpty()
+  slug: string;
 }
 
 export class UpdateTokensDto {
@@ -35,4 +34,3 @@ export class PromoteMemberDto {
   @IsNotEmpty()
   role: string;
 }
-

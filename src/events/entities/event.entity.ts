@@ -7,11 +7,11 @@ export class Event {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
-  @Column({ unique: true, length: 5 })
-  code: string;
+  @Column({ unique: true })
+  slug: string;
 
   @Column({ nullable: true })
   description: string;
@@ -34,4 +34,3 @@ export class Event {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

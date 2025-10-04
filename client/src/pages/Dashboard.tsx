@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDescription, setEventDescription] = useState('');
-  const [joinCode, setJoinCode] = useState('');
+  const [joinSlug, setJoinSlug] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
 
     try {
       const newEvent = await eventsService.createEvent(eventName, eventDescription);
-      setSuccess(`Event created! Code: ${newEvent.code}`);
+      setSuccess(`Event created! URL: ${newEvent.slug}`);
       setEventName('');
       setEventDescription('');
       setShowCreateModal(false);
@@ -78,9 +78,9 @@ const Dashboard: React.FC = () => {
     setSuccess('');
 
     try {
-      await eventsService.joinEvent(joinCode.toUpperCase());
+      await eventsService.joinEvent(joinSlug.toLowerCase());
       setSuccess('Successfully joined event!');
-      setJoinCode('');
+      setJoinSlug('');
       setShowJoinModal(false);
       loadEvents();
     } catch (err: any) {
@@ -162,7 +162,7 @@ const Dashboard: React.FC = () => {
               {events.map(event => (
                 <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.id}`)}>
                   <h4>{event.name}</h4>
-                  <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Code: <strong>{event.code}</strong></p>
+                  <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>Code: <strong>{event.slug}</strong></p>
                   <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
                     <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
@@ -216,16 +216,18 @@ const Dashboard: React.FC = () => {
             <h2>Join Event</h2>
             <form onSubmit={handleJoinEvent}>
               <div className="form-group">
-                <label>Event Code</label>
+                <label>Event URL/Slug</label>
                 <input
                   type="text"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  placeholder="Enter 5-letter code"
-                  maxLength={5}
-                  style={{ textTransform: 'uppercase', fontSize: '20px', letterSpacing: '2px', textAlign: 'center' }}
+                  value={joinSlug}
+                  onChange={(e) => setJoinSlug(e.target.value.toLowerCase())}
+                  placeholder="Enter event slug (e.g., my-awesome-event)"
+                  style={{ fontSize: '16px', letterSpacing: '1px' }}
                   required
                 />
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+                  Enter the event's URL slug (the event name with dashes instead of spaces)
+                </p>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Join Event</button>

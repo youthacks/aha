@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
@@ -21,27 +21,39 @@ export class EventsService {
     private transactionsRepository: Repository<Transaction>,
   ) {}
 
-  generateCode(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let code = '';
-    for (let i = 0; i < 5; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
+  generateSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
   }
 
   async createEvent(userId: string, createEventDto: CreateEventDto): Promise<Event> {
-    let code = this.generateCode();
-    let existing = await this.eventsRepository.findOne({ where: { code } });
+    const slug = this.generateSlug(createEventDto.name);
 
-    while (existing) {
-      code = this.generateCode();
-      existing = await this.eventsRepository.findOne({ where: { code } });
+    // Check if an event with this name already exists
+    const existingByName = await this.eventsRepository.findOne({
+      where: { name: createEventDto.name }
+    });
+
+    if (existingByName) {
+      throw new ConflictException('An event with this name already exists. Please choose a different name.');
+    }
+
+    // Check if an event with this slug already exists
+    const existingBySlug = await this.eventsRepository.findOne({
+      where: { slug }
+    });
+
+    if (existingBySlug) {
+      throw new ConflictException('An event with a similar name already exists. Please choose a different name.');
     }
 
     const event = this.eventsRepository.create({
       ...createEventDto,
-      code,
+      slug,
       ownerId: userId,
     });
 
@@ -59,11 +71,11 @@ export class EventsService {
 
   async joinEvent(userId: string, joinEventDto: JoinEventDto): Promise<EventMember> {
     const event = await this.eventsRepository.findOne({
-      where: { code: joinEventDto.code.toUpperCase() }
+      where: { slug: joinEventDto.slug.toLowerCase() }
     });
 
     if (!event) {
-      throw new NotFoundException('Event not found with this code');
+      throw new NotFoundException('Event not found with this slug');
     }
 
     const existingMember = await this.membersRepository.findOne({

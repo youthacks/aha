@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   useEffect(() => {
     const email = searchParams.get('email');
@@ -23,7 +25,9 @@ const VerifyEmail: React.FC = () => {
         const response = await authService.verifyEmail(email, token);
         setStatus('success');
         setMessage(response.message || 'Email verified successfully!');
-        setTimeout(() => navigate('/dashboard'), 2000);
+
+        // Wait a moment, then redirect to login page instead of dashboard
+        setTimeout(() => navigate('/login'), 2000);
       } catch (err: any) {
         setStatus('error');
         setMessage(err.response?.data?.message || 'Verification failed');
@@ -49,7 +53,7 @@ const VerifyEmail: React.FC = () => {
         {status === 'success' && (
           <div className="alert alert-success">
             {message}
-            <p style={{ marginTop: '10px' }}>Redirecting to dashboard...</p>
+            <p style={{ marginTop: '10px' }}>Redirecting to login page...</p>
           </div>
         )}
 
@@ -69,4 +73,3 @@ const VerifyEmail: React.FC = () => {
 };
 
 export default VerifyEmail;
-
