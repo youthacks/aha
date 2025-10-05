@@ -398,8 +398,13 @@ const EventDetails: React.FC = () => {
             Shop ({shopItems.length})
           </button>
           {canManage && (
-            <button className={activeTab === 'global-history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('global-history')}>
+            <button className={activeTab === 'transactions' ? 'tab active' : 'tab'} onClick={() => setActiveTab('transactions')}>
               Transactions
+            </button>
+          )}
+          {canManage && (
+            <button className={activeTab === 'global-history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('global-history')}>
+              Global History
             </button>
           )}
           <button className={activeTab === 'history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('history')}>
@@ -641,7 +646,7 @@ const EventDetails: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'global-history' && canManage && (
+          {activeTab === 'transactions' && canManage && (
             <div>
               <h3 style={{ marginBottom: '15px' }}>💳 All Transactions</h3>
               <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
@@ -681,6 +686,57 @@ const EventDetails: React.FC = () => {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'global-history' && canManage && (
+            <div>
+              <h3 style={{ marginBottom: '15px' }}>📋 Global History</h3>
+              <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+                Complete activity log including transactions, role changes, and administrative actions
+              </p>
+
+              <div className="transactions-list">
+                {/* Combine transactions and role changes into a unified activity log */}
+                {globalTransactions.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', background: '#f9f9f9', borderRadius: '10px' }}>
+                    <p style={{ color: '#666' }}>No activity yet.</p>
+                  </div>
+                ) : (
+                  globalTransactions.map(txn => (
+                    <div key={txn.id} className="transaction-item">
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+                          <span style={{ fontWeight: '600', color: '#333' }}>{txn.userName}</span>
+                          <span style={{
+                            fontSize: '11px',
+                            background: txn.type === 'purchase' ? '#fef3c7' : txn.amount > 0 ? '#d1fae5' : '#fee2e2',
+                            color: txn.type === 'purchase' ? '#92400e' : txn.amount > 0 ? '#065f46' : '#991b1b',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontWeight: '600'
+                          }}>
+                            {txn.type === 'purchase' ? '🛒 PURCHASE' : txn.amount > 0 ? '➕ CREDIT' : '➖ DEBIT'}
+                          </span>
+                        </div>
+                        <div className="transaction-description">
+                          {txn.stationName ? `Purchased: ${txn.stationName}` : txn.description}
+                        </div>
+                        <div className="transaction-date">{new Date(txn.createdAt).toLocaleString()}</div>
+                      </div>
+                      <div className={`transaction-amount ${txn.amount > 0 ? 'positive' : 'negative'}`}>
+                        {txn.amount > 0 ? '+' : ''}{txn.amount} 🪙
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div style={{ marginTop: '30px', padding: '15px', background: '#f0f9ff', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
+                <p style={{ fontSize: '13px', color: '#1e40af', margin: 0 }}>
+                  💡 <strong>Note:</strong> Role management logs will be added in a future update. This section will show member promotions, role changes, and other administrative actions.
+                </p>
+              </div>
             </div>
           )}
         </div>
