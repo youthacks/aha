@@ -809,7 +809,7 @@ const EventDetails: React.FC = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Purchase Limit (Optional)</label>
+                <label>Purchase Limit</label>
                 <input
                   type="number"
                   value={stationPurchaseLimit}
@@ -876,7 +876,7 @@ const EventDetails: React.FC = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Purchase Limit (Optional)</label>
+                <label>Purchase Limit</label>
                 <input
                   type="number"
                   value={editStationPurchaseLimit}
