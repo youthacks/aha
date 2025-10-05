@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { EventMember, EventRole } from './entities/event-member.entity';
-import { Purchasable } from './entities/purchasable.entity';
+import { Shop } from './entities/shop.entity';
 import { Transaction } from './entities/transaction.entity';
 import { CreateEventDto, JoinEventDto, UpdateTokensDto, PromoteMemberDto } from './dto/event.dto';
 import { CreateStationDto, PurchaseDto, UpdateStationDto } from './dto/station.dto';
@@ -15,8 +15,8 @@ export class EventsService {
     private eventsRepository: Repository<Event>,
     @InjectRepository(EventMember)
     private membersRepository: Repository<EventMember>,
-    @InjectRepository(Purchasable)
-    private purchasablesRepository: Repository<Purchasable>,
+    @InjectRepository(Shop)
+    private shopRepository: Repository<Shop>,
     @InjectRepository(Transaction)
     private transactionsRepository: Repository<Transaction>,
   ) {}
@@ -28,6 +28,25 @@ export class EventsService {
       .replace(/[^\w\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
+  }
+
+  generateJoinCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars like 0, O, 1, I
+    let code = '';
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+  }
+
+  generateReceiptCode(): string {
+    // Generate a simple 5-character alphanumeric code
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars like 0, O, 1, I
+    let code = '';
+    for (let i = 0; i < 5; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
   }
 
   async createEvent(userId: string, createEventDto: CreateEventDto): Promise<Event> {
@@ -51,9 +70,24 @@ export class EventsService {
       throw new ConflictException('An event with a similar name already exists. Please choose a different name.');
     }
 
+    // Generate unique join code
+    let joinCode = this.generateJoinCode();
+    let existingByCode = await this.eventsRepository.findOne({
+      where: { joinCode }
+    });
+
+    // Regenerate if code already exists (very rare)
+    while (existingByCode) {
+      joinCode = this.generateJoinCode();
+      existingByCode = await this.eventsRepository.findOne({
+        where: { joinCode }
+      });
+    }
+
     const event = this.eventsRepository.create({
       ...createEventDto,
       slug,
+      joinCode,
       ownerId: userId,
     });
 
@@ -71,11 +105,11 @@ export class EventsService {
 
   async joinEvent(userId: string, joinEventDto: JoinEventDto): Promise<EventMember> {
     const event = await this.eventsRepository.findOne({
-      where: { slug: joinEventDto.slug.toLowerCase() }
+      where: { joinCode: joinEventDto.slug.toUpperCase() }
     });
 
     if (!event) {
-      throw new NotFoundException('Event not found with this slug');
+      throw new NotFoundException('Event not found with this code');
     }
 
     const existingMember = await this.membersRepository.findOne({
@@ -152,7 +186,7 @@ export class EventsService {
       order: { tokens: 'DESC' },
     });
 
-    const stations = await this.purchasablesRepository.find({
+    const stations = await this.shopRepository.find({
       where: { eventId },
     });
 
@@ -251,7 +285,7 @@ export class EventsService {
     return this.membersRepository.save(targetMember);
   }
 
-  async createStation(eventId: string, userId: string, createDto: CreateStationDto): Promise<Purchasable> {
+  async createStation(eventId: string, userId: string, createDto: CreateStationDto): Promise<Shop> {
     const member = await this.membersRepository.findOne({
       where: { eventId, userId },
     });
@@ -260,16 +294,16 @@ export class EventsService {
       throw new ForbiddenException('Only admins and managers can create stations');
     }
 
-    const station = this.purchasablesRepository.create({
+    const station = this.shopRepository.create({
       ...createDto,
       eventId,
       stock: createDto.stock || 0,
     });
 
-    return this.purchasablesRepository.save(station);
+    return this.shopRepository.save(station);
   }
 
-  async updateStation(eventId: string, stationId: string, userId: string, updateDto: UpdateStationDto): Promise<Purchasable> {
+  async updateStation(eventId: string, stationId: string, userId: string, updateDto: UpdateStationDto): Promise<Shop> {
     const member = await this.membersRepository.findOne({
       where: { eventId, userId },
     });
@@ -278,7 +312,7 @@ export class EventsService {
       throw new ForbiddenException('Only admins and managers can update stations');
     }
 
-    const station = await this.purchasablesRepository.findOne({
+    const station = await this.shopRepository.findOne({
       where: { id: stationId, eventId },
     });
 
@@ -287,7 +321,7 @@ export class EventsService {
     }
 
     Object.assign(station, updateDto);
-    return this.purchasablesRepository.save(station);
+    return this.shopRepository.save(station);
   }
 
   async deleteStation(eventId: string, stationId: string, userId: string): Promise<void> {
@@ -299,7 +333,7 @@ export class EventsService {
       throw new ForbiddenException('Only admins and managers can delete stations');
     }
 
-    const station = await this.purchasablesRepository.findOne({
+    const station = await this.shopRepository.findOne({
       where: { id: stationId, eventId },
     });
 
@@ -314,7 +348,7 @@ export class EventsService {
     );
 
     // Now delete the station
-    await this.purchasablesRepository.delete({ id: stationId });
+    await this.shopRepository.delete({ id: stationId });
   }
 
   async purchase(eventId: string, userId: string, purchaseDto: PurchaseDto): Promise<Transaction> {
@@ -331,7 +365,7 @@ export class EventsService {
       throw new BadRequestException('Admins and managers cannot make purchases');
     }
 
-    const station = await this.purchasablesRepository.findOne({
+    const station = await this.shopRepository.findOne({
       where: { id: purchaseDto.stationId, eventId },
     });
 
@@ -347,6 +381,22 @@ export class EventsService {
       throw new BadRequestException('Out of stock');
     }
 
+    // Check purchase limit if set
+    if (station.purchaseLimit && station.purchaseLimit > 0) {
+      const userPurchaseCount = await this.transactionsRepository.count({
+        where: {
+          eventId,
+          userId,
+          stationId: station.id,
+          type: 'purchase',
+        },
+      });
+
+      if (userPurchaseCount >= station.purchaseLimit) {
+        throw new BadRequestException(`You have reached the purchase limit for this item (${station.purchaseLimit} per person)`);
+      }
+    }
+
     if (member.tokens < station.price) {
       throw new BadRequestException('Insufficient tokens');
     }
@@ -356,7 +406,10 @@ export class EventsService {
 
     // Decrease stock
     station.stock -= 1;
-    await this.purchasablesRepository.save(station);
+    await this.shopRepository.save(station);
+
+    // Generate unique receipt code for QR code
+    const receiptCode = this.generateReceiptCode();
 
     const transaction = this.transactionsRepository.create({
       eventId,
@@ -365,9 +418,69 @@ export class EventsService {
       type: 'purchase',
       description: `Purchased: ${station.name}`,
       stationId: station.id,
+      receiptCode,
+      isRedeemed: false,
     });
 
     return this.transactionsRepository.save(transaction);
+  }
+
+  async redeemReceipt(eventId: string, receiptCode: string, redeemerUserId: string): Promise<any> {
+    // Verify redeemer is admin or manager
+    const redeemer = await this.membersRepository.findOne({
+      where: { eventId, userId: redeemerUserId },
+    });
+
+    if (!redeemer || (redeemer.role !== EventRole.ADMIN && redeemer.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only admins and managers can redeem receipts');
+    }
+
+    // Normalize receipt code to uppercase since codes are always generated in uppercase
+    const normalizedReceiptCode = receiptCode.toUpperCase().trim();
+
+    // Find the transaction by receipt code
+    const transaction = await this.transactionsRepository.findOne({
+      where: { eventId, receiptCode: normalizedReceiptCode, type: 'purchase' },
+      relations: ['user', 'station'],
+    });
+
+    if (!transaction) {
+      throw new NotFoundException('Receipt not found');
+    }
+
+    if (transaction.isRedeemed) {
+      throw new BadRequestException(`This receipt was already redeemed on ${new Date(transaction.redeemedAt).toLocaleString()}`);
+    }
+
+    // Mark as redeemed
+    transaction.isRedeemed = true;
+    transaction.redeemedAt = new Date();
+    transaction.redeemedBy = redeemerUserId;
+    await this.transactionsRepository.save(transaction);
+
+    return {
+      success: true,
+      transaction: {
+        id: transaction.id,
+        itemName: transaction.station?.name || 'Unknown Item',
+        buyerName: `${transaction.user.firstName} ${transaction.user.lastName}`,
+        amount: transaction.amount,
+        purchasedAt: transaction.createdAt,
+        redeemedAt: transaction.redeemedAt,
+      },
+    };
+  }
+
+  async redeemReceiptBySlug(eventSlug: string, receiptCode: string, redeemerUserId: string): Promise<any> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.redeemReceipt(event.id, receiptCode, redeemerUserId);
   }
 
   async getTransactions(eventId: string, userId: string): Promise<Transaction[]> {
@@ -381,6 +494,7 @@ export class EventsService {
 
     return this.transactionsRepository.find({
       where: { eventId, userId },
+      relations: ['station'],
       order: { createdAt: 'DESC' },
       take: 50,
     });
@@ -456,7 +570,7 @@ export class EventsService {
     return this.promoteMember(event.id, adminId, promoteDto);
   }
 
-  async createStationBySlug(eventSlug: string, userId: string, createDto: CreateStationDto): Promise<Purchasable> {
+  async createStationBySlug(eventSlug: string, userId: string, createDto: CreateStationDto): Promise<Shop> {
     const event = await this.eventsRepository.findOne({
       where: { slug: eventSlug.toLowerCase() },
     });
@@ -468,7 +582,7 @@ export class EventsService {
     return this.createStation(event.id, userId, createDto);
   }
 
-  async updateStationBySlug(eventSlug: string, stationId: string, userId: string, updateDto: UpdateStationDto): Promise<Purchasable> {
+  async updateStationBySlug(eventSlug: string, stationId: string, userId: string, updateDto: UpdateStationDto): Promise<Shop> {
     const event = await this.eventsRepository.findOne({
       where: { slug: eventSlug.toLowerCase() },
     });
@@ -610,7 +724,7 @@ export class EventsService {
 
   async deleteAll(): Promise<void> {
     await this.transactionsRepository.clear();
-    await this.purchasablesRepository.clear();
+    await this.shopRepository.clear();
     await this.membersRepository.clear();
     await this.eventsRepository.clear();
   }
@@ -635,7 +749,7 @@ export class EventsService {
 
     // Delete all related data in the correct order (due to foreign key constraints)
     await this.transactionsRepository.delete({ eventId });
-    await this.purchasablesRepository.delete({ eventId });
+    await this.shopRepository.delete({ eventId });
     await this.membersRepository.delete({ eventId });
     await this.eventsRepository.delete({ id: eventId });
   }

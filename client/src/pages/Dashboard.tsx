@@ -17,7 +17,7 @@ const Dashboard: React.FC = () => {
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [eventName, setEventName] = useState('');
   const [eventDescription, setEventDescription] = useState('');
-  const [joinSlug, setJoinSlug] = useState('');
+  const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
 
     try {
       const newEvent = await eventsService.createEvent(eventName, eventDescription);
-      setSuccess(`Event created! URL: ${newEvent.slug}`);
+      setSuccess(`Event created! Join Code: ${newEvent.joinCode}`);
       setEventName('');
       setEventDescription('');
       setShowCreateModal(false);
@@ -82,9 +82,9 @@ const Dashboard: React.FC = () => {
     setSuccess('');
 
     try {
-      await eventsService.joinEvent(joinSlug.toLowerCase());
+      await eventsService.joinEvent(joinCode.toUpperCase());
       setSuccess('Successfully joined event!');
-      setJoinSlug('');
+      setJoinCode('');
       setShowJoinModal(false);
       loadEvents();
     } catch (err: any) {
@@ -179,7 +179,9 @@ const Dashboard: React.FC = () => {
                     {adminEvents.map(event => (
                       <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                         <h4>{event.name}</h4>
-                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                          Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+                        </p>
                         <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
                           <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
@@ -203,7 +205,9 @@ const Dashboard: React.FC = () => {
                     {managerEvents.map(event => (
                       <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                         <h4>{event.name}</h4>
-                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                          Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+                        </p>
                         <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
                           <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
@@ -227,7 +231,9 @@ const Dashboard: React.FC = () => {
                     {memberEvents.map(event => (
                       <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                         <h4>{event.name}</h4>
-                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                        <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                          Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+                        </p>
                         <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
                           <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
@@ -260,7 +266,9 @@ const Dashboard: React.FC = () => {
                   archivedEvents.map(event => (
                     <div key={event.id} className="event-card archived-event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                       <h4>{event.name}</h4>
-                      <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>URL: <strong>{event.slug}</strong></p>
+                      <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                        Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+                      </p>
                       <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
                         <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#667eea' }}>
@@ -316,18 +324,16 @@ const Dashboard: React.FC = () => {
             <h2>Join Event</h2>
             <form onSubmit={handleJoinEvent}>
               <div className="form-group">
-                <label>Event URL/Slug</label>
+                <label>Event Join Code</label>
                 <input
                   type="text"
-                  value={joinSlug}
-                  onChange={(e) => setJoinSlug(e.target.value.toLowerCase())}
-                  placeholder="Enter event slug (e.g., my-awesome-event)"
-                  style={{ fontSize: '16px', letterSpacing: '1px' }}
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  placeholder="Enter 5-character code (e.g., ABC12)"
+                  maxLength={5}
                   required
+                  style={{ textTransform: 'uppercase', fontFamily: 'monospace', fontSize: '18px', letterSpacing: '2px', textAlign: 'center' }}
                 />
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-                  Enter the event's URL slug (the event name with dashes instead of spaces)
-                </p>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Join Event</button>

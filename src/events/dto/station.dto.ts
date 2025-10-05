@@ -16,6 +16,10 @@ export class CreateStationDto {
   @IsOptional()
   stock?: number;
 
+  @IsNumber()
+  @IsOptional()
+  purchaseLimit?: number;
+
   @IsString()
   @IsOptional()
   imageUrl?: string;
@@ -37,6 +41,10 @@ export class UpdateStationDto {
   @IsNumber()
   @IsOptional()
   stock?: number;
+
+  @IsNumber()
+  @IsOptional()
+  purchaseLimit?: number;
 
   @IsBoolean()
   @IsOptional()

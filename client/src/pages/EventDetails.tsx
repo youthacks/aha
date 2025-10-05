@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { eventsService, EventMember, Purchasable, Transaction, GlobalTransaction } from '../services/events.service';
+import { eventsService, EventMember, Shop, Transaction, GlobalTransaction } from '../services/events.service';
 
 const EventDetails: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<any>(null);
   const [members, setMembers] = useState<EventMember[]>([]);
-  const [purchasables, setPurchasables] = useState<Purchasable[]>([]);
+  const [shopItems, setShopItems] = useState<Shop[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [globalTransactions, setGlobalTransactions] = useState<GlobalTransaction[]>([]);
   const [myRole, setMyRole] = useState('');
@@ -27,14 +27,16 @@ const EventDetails: React.FC = () => {
   const [stationPrice, setStationPrice] = useState(0);
   const [stationDescription, setStationDescription] = useState('');
   const [stationStock, setStationStock] = useState(0);
+  const [stationPurchaseLimit, setStationPurchaseLimit] = useState(0);
   const [stationImageUrl, setStationImageUrl] = useState('');
 
   const [showEditStationModal, setShowEditStationModal] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<Purchasable | null>(null);
+  const [selectedStation, setSelectedStation] = useState<Shop | null>(null);
   const [editStationName, setEditStationName] = useState('');
   const [editStationPrice, setEditStationPrice] = useState(0);
   const [editStationDescription, setEditStationDescription] = useState('');
   const [editStationStock, setEditStationStock] = useState(0);
+  const [editStationPurchaseLimit, setEditStationPurchaseLimit] = useState(0);
   const [editStationAvailable, setEditStationAvailable] = useState(true);
   const [editStationImageUrl, setEditStationImageUrl] = useState('');
 
@@ -47,12 +49,18 @@ const EventDetails: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<Transaction | null>(null);
+
+  const [showScannerModal, setShowScannerModal] = useState(false);
+  const [scannerInput, setScannerInput] = useState('');
+
   const loadEventData = useCallback(async (silent = false) => {
     try {
       const data = await eventsService.getEventDetails(eventId!);
       setEvent(data.event);
       setMembers(data.members);
-      setPurchasables(data.stations);
+      setShopItems(data.stations);
       setMyRole(data.myRole);
       setMyTokens(data.myTokens);
 
@@ -130,17 +138,18 @@ const EventDetails: React.FC = () => {
     e.preventDefault();
 
     try {
-      await eventsService.createStation(eventId!, stationName, stationPrice, stationDescription, stationStock, stationImageUrl);
-      setSuccess('Purchasable created!');
+      await eventsService.createStation(eventId!, stationName, stationPrice, stationDescription, stationStock, stationImageUrl, stationPurchaseLimit || undefined);
+      setSuccess('Shop item created!');
       setShowStationModal(false);
       setStationName('');
       setStationPrice(0);
       setStationDescription('');
       setStationStock(0);
+      setStationPurchaseLimit(0);
       setStationImageUrl('');
       await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create purchasable');
+      setError(err.response?.data?.message || 'Failed to create shop item');
     }
   };
 
@@ -154,15 +163,16 @@ const EventDetails: React.FC = () => {
         price: editStationPrice,
         description: editStationDescription,
         stock: editStationStock,
+        purchaseLimit: editStationPurchaseLimit || undefined,
         isAvailable: editStationAvailable,
         imageUrl: editStationImageUrl,
       });
-      setSuccess('Purchasable updated!');
+      setSuccess('Shop item updated!');
       setShowEditStationModal(false);
       setSelectedStation(null);
       await loadEventData(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update purchasable');
+      setError(err.response?.data?.message || 'Failed to update shop item');
     }
   };
 
@@ -170,11 +180,28 @@ const EventDetails: React.FC = () => {
     if (!window.confirm(`Purchase ${stationName}?`)) return;
 
     try {
-      await eventsService.purchase(eventId!, stationId);
+      const receipt = await eventsService.purchase(eventId!, stationId);
       setSuccess(`Successfully purchased ${stationName}!`);
+      setSelectedReceipt(receipt);
+      setShowReceiptModal(true);
       await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
       setError(err.response?.data?.message || 'Purchase failed');
+    }
+  };
+
+  const handleRedeemReceipt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scannerInput.trim()) return;
+
+    try {
+      const result = await eventsService.redeemReceipt(eventId!, scannerInput.trim());
+      setSuccess(`Receipt redeemed successfully! Item: ${result.transaction.itemName}, Buyer: ${result.transaction.buyerName}`);
+      setShowScannerModal(false);
+      setScannerInput('');
+      await loadEventData(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to redeem receipt');
     }
   };
 
@@ -201,19 +228,19 @@ const EventDetails: React.FC = () => {
     e.preventDefault();
 
     if (deleteStationConfirmText !== selectedStation?.name) {
-      setError('Purchasable name does not match. Please type the exact purchasable name.');
+      setError('Shop item name does not match. Please type the exact shop item name.');
       return;
     }
 
     try {
       await eventsService.deleteStation(eventId!, selectedStation!.id);
-      setSuccess('Purchasable deleted successfully.');
+      setSuccess('Shop item deleted successfully.');
       setShowDeleteStationModal(false);
       setDeleteStationConfirmText('');
       setSelectedStation(null);
       await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete purchasable');
+      setError(err.response?.data?.message || 'Failed to delete shop item');
     }
   };
 
@@ -258,7 +285,7 @@ const EventDetails: React.FC = () => {
     setShowPromoteModal(true);
   };
 
-  const openEditStationModal = (station: Purchasable) => {
+  const openEditStationModal = (station: Shop) => {
     setSelectedStation(station);
     setEditStationName(station.name);
     setEditStationPrice(station.price);
@@ -266,10 +293,11 @@ const EventDetails: React.FC = () => {
     setEditStationStock(station.stock);
     setEditStationAvailable(station.isAvailable);
     setEditStationImageUrl(station.imageUrl || '');
+    setEditStationPurchaseLimit(station.purchaseLimit || 0);
     setShowEditStationModal(true);
   };
 
-  const openDeleteStationModal = (station: Purchasable) => {
+  const openDeleteStationModal = (station: Shop) => {
     setSelectedStation(station);
     setDeleteStationConfirmText('');
     setShowDeleteStationModal(true);
@@ -294,7 +322,9 @@ const EventDetails: React.FC = () => {
           <div>
             <button onClick={() => navigate('/dashboard')} className="back-button">← Back</button>
             <h1 style={{ marginTop: '10px' }}>{event.name}</h1>
-            <p style={{ color: '#666', fontSize: '14px' }}>URL: <strong>{event.slug}</strong></p>
+            <p style={{ color: '#666', fontSize: '14px' }}>
+              Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '16px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+            </p>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '14px', color: '#666' }}>My Tokens</div>
@@ -313,8 +343,8 @@ const EventDetails: React.FC = () => {
           <button className={activeTab === 'members' ? 'tab active' : 'tab'} onClick={() => setActiveTab('members')}>
             Members ({members.length})
           </button>
-          <button className={activeTab === 'stations' ? 'tab active' : 'tab'} onClick={() => setActiveTab('stations')}>
-            Purchasables ({purchasables.length})
+          <button className={activeTab === 'shop' ? 'tab active' : 'tab'} onClick={() => setActiveTab('shop')}>
+            Shop ({shopItems.length})
           </button>
           {canManage && (
             <button className={activeTab === 'global-history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('global-history')}>
@@ -335,8 +365,8 @@ const EventDetails: React.FC = () => {
                   <div className="stat-label">Members</div>
                 </div>
                 <div className="stat-card">
-                  <div className="stat-value">{purchasables.length}</div>
-                  <div className="stat-label">Purchasables</div>
+                  <div className="stat-value">{shopItems.length}</div>
+                  <div className="stat-label">Shop Items</div>
                 </div>
                 {isRegularMember && (
                   <div className="stat-card">
@@ -397,10 +427,10 @@ const EventDetails: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'stations' && (
+          {activeTab === 'shop' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h3>Purchasables</h3>
+                <h3>Shop</h3>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   {canManage && (
                     <>
@@ -425,21 +455,21 @@ const EventDetails: React.FC = () => {
                           float: 'right'
                         }}
                       >
-                        + New Purchasable
+                        + New Item
                       </button>
                     </>
                   )}
                 </div>
               </div>
 
-              {purchasables.length === 0 ? (
+              {shopItems.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', background: '#f9f9f9', borderRadius: '10px' }}>
-                  <p style={{ color: '#666' }}>No purchasables yet.</p>
+                  <p style={{ color: '#666' }}>No shop items yet.</p>
                   {canManage && <p style={{ color: '#999', fontSize: '14px', marginTop: '10px' }}>Create one to let members spend their tokens!</p>}
                 </div>
               ) : (
                 <div className="stations-grid">
-                  {purchasables.map(station => (
+                  {shopItems.map(station => (
                     <div key={station.id} className="station-card">
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
                         <h4 style={{ margin: 0, flex: 1 }}>{station.name}</h4>
@@ -496,7 +526,22 @@ const EventDetails: React.FC = () => {
 
           {activeTab === 'history' && (
             <div>
-              <h3 style={{ marginBottom: '15px' }}>Transaction History</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3 style={{ margin: 0 }}>Transaction History</h3>
+                {canManage && (
+                  <button
+                    onClick={() => setShowScannerModal(true)}
+                    className="btn-primary"
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '14px',
+                      width: 'auto',
+                    }}
+                  >
+                    🎫 Redeem Receipt
+                  </button>
+                )}
+              </div>
               {transactions.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px', background: '#f9f9f9', borderRadius: '10px' }}>
                   <p style={{ color: '#666' }}>No transactions yet.</p>
@@ -504,13 +549,39 @@ const EventDetails: React.FC = () => {
               ) : (
                 <div className="transactions-list">
                   {transactions.map(txn => (
-                    <div key={txn.id} className="transaction-item">
-                      <div>
-                        <div className="transaction-description">{txn.description}</div>
-                        <div className="transaction-date">{new Date(txn.createdAt).toLocaleString()}</div>
-                      </div>
-                      <div className={`transaction-amount ${txn.amount > 0 ? 'positive' : 'negative'}`}>
-                        {txn.amount > 0 ? '+' : ''}{txn.amount} 🪙
+                    <div key={txn.id} className="transaction-item" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '10px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div>
+                          <div className="transaction-description">{txn.description}</div>
+                          <div className="transaction-date">{new Date(txn.createdAt).toLocaleString()}</div>
+                          {txn.type === 'purchase' && txn.receiptCode && (
+                            <div style={{ marginTop: '8px' }}>
+                              <div style={{ fontSize: '11px', color: '#666', marginBottom: '4px' }}>Receipt Code:</div>
+                              <div style={{
+                                fontFamily: 'monospace',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                letterSpacing: '2px',
+                                padding: '8px 12px',
+                                background: txn.isRedeemed ? '#fee2e2' : '#d1fae5',
+                                color: txn.isRedeemed ? '#991b1b' : '#065f46',
+                                borderRadius: '6px',
+                                display: 'inline-block',
+                                border: txn.isRedeemed ? '2px solid #fecaca' : '2px solid #86efac',
+                              }}>
+                                {txn.receiptCode}
+                              </div>
+                              {txn.isRedeemed && (
+                                <div style={{ fontSize: '11px', color: '#991b1b', marginTop: '4px', fontWeight: '600' }}>
+                                  ✓ Redeemed on {new Date(txn.redeemedAt!).toLocaleString()}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className={`transaction-amount ${txn.amount > 0 ? 'positive' : 'negative'}`}>
+                          {txn.amount > 0 ? '+' : ''}{txn.amount} 🪙
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -611,7 +682,7 @@ const EventDetails: React.FC = () => {
               )}
             </div>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px', marginTop: '20px' }}>
-              Once you delete this event, all members, tokens, purchasables, and transaction history will be permanently removed. This action cannot be undone.
+              Once you delete this event, all members, tokens, shop items, and transaction history will be permanently removed. This action cannot be undone.
             </p>
             <button
               onClick={() => setShowDeleteModal(true)}
@@ -642,21 +713,22 @@ const EventDetails: React.FC = () => {
             <p style={{ color: '#666', marginBottom: '20px' }}>Current: {selectedMember.tokens} 🪙</p>
             <form onSubmit={handleUpdateTokens}>
               <div className="form-group">
+                <label>Operation</label>
+                <select value={tokenOperation} onChange={(e) => setTokenOperation(e.target.value as 'add' | 'remove')} className="form-select">
+                  <option value="add">➕ Add Tokens</option>
+                  <option value="remove">➖ Remove Tokens</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Token Amount</label>
                 <input
                   type="number"
                   value={tokenAmount}
-                  onChange={(e) => setTokenAmount(parseInt(e.target.value))}
+                  onChange={(e) => setTokenAmount(parseInt(e.target.value) || 0)}
                   placeholder="Enter amount (e.g., 10)"
+                  min="0"
                   required
                 />
-              </div>
-              <div className="form-group">
-                <label>Operation</label>
-                <select value={tokenOperation} onChange={(e) => setTokenOperation(e.target.value as 'add' | 'remove')} className="form-select">
-                  <option value="add">Add Tokens</option>
-                  <option value="remove">Remove Tokens</option>
-                </select>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Update</button>
@@ -692,10 +764,10 @@ const EventDetails: React.FC = () => {
       {showStationModal && (
         <div className="modal-overlay" onClick={() => setShowStationModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Create Purchasable</h2>
+            <h2>Create Shop Item</h2>
             <form onSubmit={handleCreateStation}>
               <div className="form-group">
-                <label>Purchasable Name</label>
+                <label>Item Name</label>
                 <input
                   type="text"
                   value={stationName}
@@ -737,6 +809,17 @@ const EventDetails: React.FC = () => {
                 />
               </div>
               <div className="form-group">
+                <label>Purchase Limit (Optional)</label>
+                <input
+                  type="number"
+                  value={stationPurchaseLimit}
+                  onChange={(e) => setStationPurchaseLimit(parseInt(e.target.value))}
+                  placeholder="Max purchases per member"
+                  min={0}
+                  required
+                />
+              </div>
+              <div className="form-group">
                 <label>Image URL (Optional)</label>
                 <input
                   type="text"
@@ -747,7 +830,7 @@ const EventDetails: React.FC = () => {
                 />
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button type="submit" className="btn-primary">Create Purchasable</button>
+                <button type="submit" className="btn-primary">Create Item</button>
                 <button type="button" onClick={() => setShowStationModal(false)} className="btn-secondary">Cancel</button>
               </div>
             </form>
@@ -758,10 +841,10 @@ const EventDetails: React.FC = () => {
       {showEditStationModal && selectedStation && (
         <div className="modal-overlay" onClick={() => setShowEditStationModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Edit Purchasable</h2>
+            <h2>Edit Shop Item</h2>
             <form onSubmit={handleEditStation}>
               <div className="form-group">
-                <label>Purchasable Name</label>
+                <label>Item Name</label>
                 <input
                   type="text"
                   value={editStationName}
@@ -788,6 +871,17 @@ const EventDetails: React.FC = () => {
                   value={editStationStock}
                   onChange={(e) => setEditStationStock(parseInt(e.target.value))}
                   placeholder="How many in stock?"
+                  min={0}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Purchase Limit (Optional)</label>
+                <input
+                  type="number"
+                  value={editStationPurchaseLimit}
+                  onChange={(e) => setEditStationPurchaseLimit(parseInt(e.target.value))}
+                  placeholder="Max purchases per member"
                   min={0}
                   required
                 />
@@ -840,7 +934,7 @@ const EventDetails: React.FC = () => {
                 </label>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <button type="submit" className="btn-primary">Update Purchasable</button>
+                <button type="submit" className="btn-primary">Update Item</button>
                 <button type="button" onClick={() => setShowEditStationModal(false)} className="btn-secondary">Cancel</button>
               </div>
             </form>
@@ -857,7 +951,7 @@ const EventDetails: React.FC = () => {
             </p>
             <ul style={{ fontSize: '14px', color: '#666', marginBottom: '20px', marginLeft: '20px', lineHeight: '1.8' }}>
               <li>All {members.length} member(s) and their tokens</li>
-              <li>All {purchasables.length} purchasable(s)</li>
+              <li>All {shopItems.length} shop item(s)</li>
               <li>Complete transaction history</li>
             </ul>
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px', marginBottom: '20px' }}>
@@ -915,7 +1009,7 @@ const EventDetails: React.FC = () => {
       {showDeleteStationModal && selectedStation && (
         <div className="modal-overlay" onClick={() => setShowDeleteStationModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px' }}>
-            <h2 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Delete Purchasable</h2>
+            <h2 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Delete Shop Item</h2>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
               Are you sure you want to delete <strong>"{selectedStation.name}"</strong>?
             </p>
@@ -926,12 +1020,12 @@ const EventDetails: React.FC = () => {
             </div>
             <form onSubmit={handleDeleteStation}>
               <div className="form-group">
-                <label style={{ fontWeight: '600' }}>Type the purchasable name to confirm: <strong>{selectedStation.name}</strong></label>
+                <label style={{ fontWeight: '600' }}>Type the item name to confirm: <strong>{selectedStation.name}</strong></label>
                 <input
                   type="text"
                   value={deleteStationConfirmText}
                   onChange={(e) => setDeleteStationConfirmText(e.target.value)}
-                  placeholder="Enter purchasable name exactly"
+                  placeholder="Enter item name exactly"
                   required
                   style={{ fontFamily: 'monospace' }}
                 />
@@ -952,7 +1046,7 @@ const EventDetails: React.FC = () => {
                     flex: 1
                   }}
                 >
-                  Delete Purchasable
+                  Delete Item
                 </button>
                 <button
                   type="button"
@@ -965,6 +1059,97 @@ const EventDetails: React.FC = () => {
                 >
                   Cancel
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showReceiptModal && selectedReceipt && (
+        <div className="modal-overlay" onClick={() => setShowReceiptModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '450px', textAlign: 'center' }}>
+            <h2 style={{ color: '#059669', marginBottom: '10px' }}>✓ Purchase Successful!</h2>
+            <p style={{ color: '#666', marginBottom: '20px' }}>{selectedReceipt.description}</p>
+
+            <div style={{
+              background: '#f0fdf4',
+              border: '2px solid #86efac',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '20px'
+            }}>
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px', fontWeight: '600' }}>
+                YOUR RECEIPT CODE
+              </div>
+              <div style={{
+                fontFamily: 'monospace',
+                fontSize: '28px',
+                fontWeight: 'bold',
+                letterSpacing: '3px',
+                color: '#065f46',
+                marginBottom: '8px'
+              }}>
+                {selectedReceipt.receiptCode}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                Show this code to an admin/manager to redeem your item
+              </div>
+            </div>
+
+            <div style={{ fontSize: '13px', color: '#666', marginBottom: '15px', textAlign: 'left', background: '#f9fafb', padding: '12px', borderRadius: '8px' }}>
+              <strong>Transaction Details:</strong><br />
+              Amount: {selectedReceipt.amount} 🪙<br />
+              Time: {new Date(selectedReceipt.createdAt).toLocaleString()}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  if (selectedReceipt.receiptCode) {
+                    navigator.clipboard.writeText(selectedReceipt.receiptCode);
+                    setSuccess('Receipt code copied to clipboard!');
+                  }
+                }}
+                className="btn-secondary"
+                style={{ flex: 1 }}
+              >
+                📋 Copy Code
+              </button>
+              <button
+                onClick={() => {
+                  setShowReceiptModal(false);
+                  setSelectedReceipt(null);
+                }}
+                className="btn-primary"
+                style={{ flex: 1 }}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showScannerModal && (
+        <div className="modal-overlay" onClick={() => setShowScannerModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <h2>Redeem Receipt</h2>
+            <p style={{ color: '#666', marginBottom: '20px' }}>Enter the receipt ID</p>
+            <form onSubmit={handleRedeemReceipt}>
+              <div className="form-group">
+                <label>Receipt ID</label>
+                <input
+                  type="text"
+                  value={scannerInput}
+                  onChange={(e) => setScannerInput(e.target.value)}
+                  placeholder="Enter receipt ID"
+                  required
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e0e0e0' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="submit" className="btn-primary">Redeem Receipt</button>
+                <button type="button" onClick={() => setShowScannerModal(false)} className="btn-secondary">Cancel</button>
               </div>
             </form>
           </div>

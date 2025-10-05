@@ -4,6 +4,7 @@ export interface Event {
   id: string;
   name: string;
   slug: string;
+  joinCode: string;
   description: string;
   ownerId: string;
   myRole?: string;
@@ -23,13 +24,14 @@ export interface EventMember {
   joinedAt: string;
 }
 
-export interface Purchasable {
+export interface Shop {
   id: string;
   name: string;
   description: string;
   price: number;
   isAvailable: boolean;
   stock: number;
+  purchaseLimit?: number;
   imageUrl?: string;
 }
 
@@ -39,6 +41,12 @@ export interface Transaction {
   type: string;
   description: string;
   createdAt: string;
+  receiptCode?: string;
+  isRedeemed?: boolean;
+  redeemedAt?: string;
+  station?: {
+    name: string;
+  };
 }
 
 export interface GlobalTransaction {
@@ -58,8 +66,8 @@ export const eventsService = {
     return response.data;
   },
 
-  joinEvent: async (slug: string) => {
-    const response = await api.post('/events/join', { slug });
+  joinEvent: async (code: string) => {
+    const response = await api.post('/events/join', { slug: code });
     return response.data;
   },
 
@@ -88,12 +96,12 @@ export const eventsService = {
     return response.data;
   },
 
-  createStation: async (eventSlug: string, name: string, price: number, description?: string, stock?: number, imageUrl?: string) => {
-    const response = await api.post(`/events/${eventSlug}/stations`, { name, price, description, stock, imageUrl });
+  createStation: async (eventSlug: string, name: string, price: number, description?: string, stock?: number, imageUrl?: string, purchaseLimit?: number) => {
+    const response = await api.post(`/events/${eventSlug}/stations`, { name, price, description, stock, imageUrl, purchaseLimit });
     return response.data;
   },
 
-  updateStation: async (eventSlug: string, stationId: string, data: Partial<Purchasable>) => {
+  updateStation: async (eventSlug: string, stationId: string, data: Partial<Shop>) => {
     const response = await api.put(`/events/${eventSlug}/stations/${stationId}`, data);
     return response.data;
   },
@@ -105,6 +113,11 @@ export const eventsService = {
 
   purchase: async (eventSlug: string, stationId: string) => {
     const response = await api.post(`/events/${eventSlug}/purchase`, { stationId });
+    return response.data;
+  },
+
+  redeemReceipt: async (eventSlug: string, receiptCode: string) => {
+    const response = await api.post(`/events/${eventSlug}/redeem`, { receiptCode });
     return response.data;
   },
 

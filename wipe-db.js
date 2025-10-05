@@ -19,8 +19,8 @@ async function wipeDatabase() {
     console.log('Dropping transactions table...');
     await client.query('DROP TABLE IF EXISTS transactions CASCADE');
 
-    console.log('Dropping purchasables table...');
-    await client.query('DROP TABLE IF EXISTS purchasables CASCADE');
+    console.log('Dropping shop table...');
+    await client.query('DROP TABLE IF EXISTS shop CASCADE');
 
     console.log('Dropping event_members table...');
     await client.query('DROP TABLE IF EXISTS event_members CASCADE');
@@ -45,4 +45,3 @@ async function wipeDatabase() {
 }
 
 wipeDatabase();
-

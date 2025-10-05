@@ -13,6 +13,9 @@ export class Event {
   @Column({ unique: true })
   slug: string;
 
+  @Column({ unique: true })
+  joinCode: string;
+
   @Column({ nullable: true })
   description: string;
 

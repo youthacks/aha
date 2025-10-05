@@ -1,33 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { eventsService, Purchasable } from '../services/events.service';
+import { eventsService, Shop } from '../services/events.service';
 import '../styles/BigScreenMode.css';
 
 const BigScreenMode: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const [purchasables, setPurchasables] = useState<Purchasable[]>([]);
+  const [shopItems, setShopItems] = useState<Shop[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const loadPurchasables = useCallback(async () => {
+  const loadShopItems = useCallback(async () => {
     try {
       const data = await eventsService.getEventDetails(eventId!);
-      setPurchasables(data.stations);
+      setShopItems(data.stations);
     } catch (err) {
-      console.error('Failed to load purchasables', err);
+      console.error('Failed to load shop items', err);
     }
   }, [eventId]);
 
   useEffect(() => {
-    loadPurchasables();
-    
+    loadShopItems();
+
     // Auto-refresh every 5 seconds
     const interval = setInterval(() => {
-      loadPurchasables();
+      loadShopItems();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [loadPurchasables]);
+  }, [loadShopItems]);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -48,8 +48,8 @@ const BigScreenMode: React.FC = () => {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const availableItems = purchasables.filter(p => p.isAvailable && p.stock > 0);
-  const soldOutItems = purchasables.filter(p => p.isAvailable && p.stock === 0);
+  const availableItems = shopItems.filter(p => p.isAvailable && p.stock > 0);
+  const soldOutItems = shopItems.filter(p => p.isAvailable && p.stock === 0);
   const allDisplayItems = [...availableItems, ...soldOutItems];
 
   if (allDisplayItems.length === 0) {

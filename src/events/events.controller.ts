@@ -100,6 +100,15 @@ export class EventsController {
     return this.eventsService.getAllTransactionsBySlug(eventSlug, req.user.id);
   }
 
+  @Post(':eventSlug/redeem')
+  async redeemReceipt(
+    @Param('eventSlug') eventSlug: string,
+    @Request() req,
+    @Body() body: { receiptCode: string },
+  ) {
+    return this.eventsService.redeemReceiptBySlug(eventSlug, body.receiptCode, req.user.id);
+  }
+
   @Put(':eventSlug/archive')
   async archiveEvent(@Param('eventSlug') eventSlug: string, @Request() req) {
     await this.eventsService.archiveEventBySlug(eventSlug, req.user.id);
