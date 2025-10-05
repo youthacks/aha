@@ -98,7 +98,7 @@ const Dashboard: React.FC = () => {
   }
 
   // Group events by role
-  const adminEvents = events.filter(e => e.myRole === 'admin');
+  const ownerEvents = events.filter(e => e.myRole === 'owner');
   const managerEvents = events.filter(e => e.myRole === 'manager');
   const memberEvents = events.filter(e => e.myRole === 'member');
 
@@ -173,15 +173,15 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Admin Events */}
-              {adminEvents.length > 0 && (
+              {/* Owner Events */}
+              {ownerEvents.length > 0 && (
                 <div style={{ marginBottom: '30px' }}>
                   <h4 style={{ color: '#ff6b6b', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span className="role-badge role-admin">ADMIN</span>
-                    <span style={{ color: '#666', fontSize: '14px', fontWeight: 'normal' }}>({adminEvents.length} event{adminEvents.length !== 1 ? 's' : ''})</span>
+                    <span className="role-badge role-owner">OWNER</span>
+                    <span style={{ color: '#666', fontSize: '14px', fontWeight: 'normal' }}>({ownerEvents.length} event{ownerEvents.length !== 1 ? 's' : ''})</span>
                   </h4>
                   <div className="events-grid">
-                    {adminEvents.map(event => (
+                    {ownerEvents.map(event => (
                       <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                         <h4>{event.name}</h4>
                         <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>

@@ -32,7 +32,7 @@ export class EventsService {
   }
 
   generateJoinCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars like 0, O, 1, I
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 5; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -41,8 +41,7 @@ export class EventsService {
   }
 
   generateReceiptCode(): string {
-    // Generate a simple 5-character alphanumeric code
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars like 0, O, 1, I
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 5; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -53,7 +52,6 @@ export class EventsService {
   async createEvent(userId: string, createEventDto: CreateEventDto): Promise<Event> {
     const slug = this.generateSlug(createEventDto.name);
 
-    // Check if an event with this name already exists
     const existingByName = await this.eventsRepository.findOne({
       where: { name: createEventDto.name }
     });
@@ -62,7 +60,6 @@ export class EventsService {
       throw new ConflictException('An event with this name already exists. Please choose a different name.');
     }
 
-    // Check if an event with this slug already exists
     const existingBySlug = await this.eventsRepository.findOne({
       where: { slug }
     });
@@ -71,13 +68,11 @@ export class EventsService {
       throw new ConflictException('An event with a similar name already exists. Please choose a different name.');
     }
 
-    // Generate unique join code
     let joinCode = this.generateJoinCode();
     let existingByCode = await this.eventsRepository.findOne({
       where: { joinCode }
     });
 
-    // Regenerate if code already exists (very rare)
     while (existingByCode) {
       joinCode = this.generateJoinCode();
       existingByCode = await this.eventsRepository.findOne({
@@ -97,7 +92,7 @@ export class EventsService {
     await this.membersRepository.save({
       eventId: savedEvent.id,
       userId,
-      role: EventRole.ADMIN,
+      role: EventRole.OWNER,
       tokens: 0,
     });
 
@@ -214,8 +209,8 @@ export class EventsService {
       relations: ['user'],
     });
 
-    if (!adminMember || (adminMember.role !== EventRole.ADMIN && adminMember.role !== EventRole.MANAGER)) {
-      throw new ForbiddenException('Only admins and managers can update tokens');
+    if (!adminMember || (adminMember.role !== EventRole.OWNER && adminMember.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only owners and managers can update tokens');
     }
 
     const targetMember = await this.membersRepository.findOne({
@@ -227,9 +222,9 @@ export class EventsService {
       throw new NotFoundException('Member not found in this event');
     }
 
-    // Prevent giving tokens to admins and managers
-    if (targetMember.role === EventRole.ADMIN || targetMember.role === EventRole.MANAGER) {
-      throw new BadRequestException('Cannot update tokens for admins or managers');
+    // Prevent giving tokens to owners and managers
+    if (targetMember.role === EventRole.OWNER || targetMember.role === EventRole.MANAGER) {
+      throw new BadRequestException('Cannot update tokens for owners or managers');
     }
 
     targetMember.tokens += updateDto.amount;
@@ -257,8 +252,8 @@ export class EventsService {
       where: { eventId, userId: adminId },
     });
 
-    if (!adminMember || adminMember.role !== EventRole.ADMIN) {
-      throw new ForbiddenException('Only admins can promote members');
+    if (!adminMember || adminMember.role !== EventRole.OWNER) {
+      throw new ForbiddenException('Only owners can promote members');
     }
 
     const targetMember = await this.membersRepository.findOne({
@@ -276,9 +271,13 @@ export class EventsService {
     const oldRole = targetMember.role;
     const newRole = promoteDto.role as EventRole;
 
-    // If promoting to admin or manager, reset tokens to 0
-    if ((newRole === EventRole.ADMIN || newRole === EventRole.MANAGER) &&
-        (oldRole !== EventRole.ADMIN && oldRole !== EventRole.MANAGER)) {
+    // Prevent promotion to owner
+    if (newRole === EventRole.OWNER) {
+      throw new ForbiddenException('Cannot promote anyone to Owner role');
+    }
+
+    // If promoting to manager, reset tokens to 0
+    if (newRole === EventRole.MANAGER && oldRole !== EventRole.MANAGER) {
       targetMember.tokens = 0;
     }
 
@@ -291,8 +290,8 @@ export class EventsService {
       where: { eventId, userId },
     });
 
-    if (!member || (member.role !== EventRole.ADMIN && member.role !== EventRole.MANAGER)) {
-      throw new ForbiddenException('Only admins and managers can create stations');
+    if (!member || (member.role !== EventRole.OWNER && member.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only owners and managers can create stations');
     }
 
     const station = this.shopRepository.create({
@@ -309,8 +308,8 @@ export class EventsService {
       where: { eventId, userId },
     });
 
-    if (!member || (member.role !== EventRole.ADMIN && member.role !== EventRole.MANAGER)) {
-      throw new ForbiddenException('Only admins and managers can update stations');
+    if (!member || (member.role !== EventRole.OWNER && member.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only owners and managers can update stations');
     }
 
     const station = await this.shopRepository.findOne({
@@ -330,8 +329,8 @@ export class EventsService {
       where: { eventId, userId },
     });
 
-    if (!member || (member.role !== EventRole.ADMIN && member.role !== EventRole.MANAGER)) {
-      throw new ForbiddenException('Only admins and managers can delete stations');
+    if (!member || (member.role !== EventRole.OWNER && member.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only owners and managers can delete stations');
     }
 
     const station = await this.shopRepository.findOne({
@@ -361,9 +360,9 @@ export class EventsService {
       throw new ForbiddenException('Not a member of this event');
     }
 
-    // Prevent admins and managers from purchasing
-    if (member.role === EventRole.ADMIN || member.role === EventRole.MANAGER) {
-      throw new BadRequestException('Admins and managers cannot make purchases');
+    // Prevent owners and managers from purchasing
+    if (member.role === EventRole.OWNER || member.role === EventRole.MANAGER) {
+      throw new BadRequestException('Owners and managers cannot make purchases');
     }
 
     const station = await this.shopRepository.findOne({
@@ -427,13 +426,13 @@ export class EventsService {
   }
 
   async redeemReceipt(eventId: string, receiptCode: string, redeemerUserId: string): Promise<any> {
-    // Verify redeemer is admin or manager
+    // Verify redeemer is owner or manager
     const redeemer = await this.membersRepository.findOne({
       where: { eventId, userId: redeemerUserId },
     });
 
-    if (!redeemer || (redeemer.role !== EventRole.ADMIN && redeemer.role !== EventRole.MANAGER)) {
-      throw new ForbiddenException('Only admins and managers can redeem receipts');
+    if (!redeemer || (redeemer.role !== EventRole.OWNER && redeemer.role !== EventRole.MANAGER)) {
+      throw new ForbiddenException('Only owners and managers can redeem receipts');
     }
 
     // Normalize receipt code to uppercase since codes are always generated in uppercase
@@ -510,9 +509,9 @@ export class EventsService {
       throw new ForbiddenException('Not a member of this event');
     }
 
-    // Only admins and managers can view all transactions
-    if (member.role !== EventRole.ADMIN && member.role !== EventRole.MANAGER) {
-      throw new ForbiddenException('Only admins and managers can view global transaction history');
+    // Only owners and managers can view all transactions
+    if (member.role !== EventRole.OWNER && member.role !== EventRole.MANAGER) {
+      throw new ForbiddenException('Only owners and managers can view global transaction history');
     }
 
     const transactions = await this.transactionsRepository.find({
@@ -652,13 +651,13 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    // Only the owner (admin) can archive the event
+    // Only the owner can archive the event
     const membership = await this.membersRepository.findOne({
       where: { eventId, userId },
     });
 
-    if (!membership || membership.role !== EventRole.ADMIN) {
-      throw new ForbiddenException('Only the event admin can archive this event');
+    if (!membership || membership.role !== EventRole.OWNER) {
+      throw new ForbiddenException('Only the event owner can archive this event');
     }
 
     event.isArchived = true;
@@ -674,13 +673,13 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    // Only the owner (admin) can unarchive the event
+    // Only the owner can unarchive the event
     const membership = await this.membersRepository.findOne({
       where: { eventId, userId },
     });
 
-    if (!membership || membership.role !== EventRole.ADMIN) {
-      throw new ForbiddenException('Only the event admin can unarchive this event');
+    if (!membership || membership.role !== EventRole.OWNER) {
+      throw new ForbiddenException('Only the event owner can unarchive this event');
     }
 
     event.isArchived = false;
@@ -739,13 +738,13 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    // Only the owner (admin) can delete the event
+    // Only the owner can delete the event
     const membership = await this.membersRepository.findOne({
       where: { eventId, userId },
     });
 
-    if (!membership || membership.role !== EventRole.ADMIN) {
-      throw new ForbiddenException('Only the event admin can delete this event');
+    if (!membership || membership.role !== EventRole.OWNER) {
+      throw new ForbiddenException('Only the event owner can delete this event');
     }
 
     // Delete all related data in the correct order (due to foreign key constraints)
@@ -764,13 +763,13 @@ export class EventsService {
       throw new NotFoundException('Event not found');
     }
 
-    // Only the owner (admin) can update event settings
+    // Only the owner can update event settings
     const membership = await this.membersRepository.findOne({
       where: { eventId, userId },
     });
 
-    if (!membership || membership.role !== EventRole.ADMIN) {
-      throw new ForbiddenException('Only the event admin can update event settings');
+    if (!membership || membership.role !== EventRole.OWNER) {
+      throw new ForbiddenException('Only the event owner can update event settings');
     }
 
     // If updating name, check for conflicts and update slug

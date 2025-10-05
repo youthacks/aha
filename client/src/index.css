@@ -342,7 +342,7 @@ code {
   text-transform: uppercase;
 }
 
-.role-admin {
+.role-owner {
   background: #ff6b6b;
   color: white;
 }

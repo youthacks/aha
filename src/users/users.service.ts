@@ -149,12 +149,6 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    // Check if new email is already taken
-    const existingUser = await this.findByEmail(newEmail);
-    if (existingUser) {
-      throw new ConflictException('Email already in use');
-    }
-
     const emailChangeTokenExpiry = new Date();
     emailChangeTokenExpiry.setHours(emailChangeTokenExpiry.getHours() + 1);
 
@@ -233,5 +227,49 @@ export class UsersService {
     user.passwordChangeTokenExpiry = null;
 
     return this.usersRepository.save(user);
+  }
+
+  async changeEmail(userId: string, changeEmailDto: ChangeEmailDto): Promise<{ message: string }> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: changeEmailDto.newEmail },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('Email is already in use');
+    }
+
+    user.email = changeEmailDto.newEmail;
+    user.isEmailVerified = false;
+
+    await this.usersRepository.save(user);
+
+    return { message: 'Email updated successfully' };
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(changePasswordDto.currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(changePasswordDto.newPassword, 10);
+
+    user.password = hashedNewPassword;
+
+    await this.usersRepository.save(user);
+
+    return { message: 'Password updated successfully' };
   }
 }

@@ -5,7 +5,7 @@ import { User } from '../../users/entities/user.entity';
 export enum EventRole {
   MEMBER = 'member',
   MANAGER = 'manager',
-  ADMIN = 'admin',
+  OWNER = 'owner',
 }
 
 @Entity('event_members')
@@ -42,4 +42,3 @@ export class EventMember {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

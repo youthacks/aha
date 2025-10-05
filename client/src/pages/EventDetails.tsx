@@ -72,8 +72,8 @@ const EventDetails: React.FC = () => {
       const txns = await eventsService.getTransactions(eventId!);
       setTransactions(txns);
 
-      // Load global transactions if user is admin or manager
-      if (data.myRole === 'admin' || data.myRole === 'manager') {
+      // Load global transactions if user is owner or manager
+      if (data.myRole === 'owner' || data.myRole === 'manager') {
         try {
           const allTxns = await eventsService.getAllTransactions(eventId!);
           setGlobalTransactions(allTxns);
@@ -342,8 +342,8 @@ const EventDetails: React.FC = () => {
     return <div className="dashboard-container"><div className="alert alert-error">Event not found</div></div>;
   }
 
-  const canManage = myRole === 'admin' || myRole === 'manager';
-  const isAdmin = myRole === 'admin';
+  const canManage = myRole === 'owner' || myRole === 'manager';
+  const isOwner = myRole === 'owner';
   const isRegularMember = myRole === 'member';
 
   return (
@@ -355,7 +355,7 @@ const EventDetails: React.FC = () => {
             <h1 style={{ marginTop: '10px' }}>{event.name}</h1>
             <p style={{ color: '#666', fontSize: '14px' }}>
               Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '16px', letterSpacing: '1px' }}>{event.joinCode}</strong>
-              {isAdmin && (
+              {isOwner && (
                 <button
                   onClick={openSettingsModal}
                   style={{
@@ -469,7 +469,7 @@ const EventDetails: React.FC = () => {
                           <button onClick={() => openTokenModal(member)} className="btn-small">
                             Tokens
                           </button>
-                          {isAdmin && member.role !== 'admin' && (
+                          {isOwner && member.role !== 'owner' && (
                             <button onClick={() => openPromoteModal(member)} className="btn-small btn-secondary-small">
                               Role
                             </button>
@@ -741,7 +741,7 @@ const EventDetails: React.FC = () => {
           )}
         </div>
 
-        {isAdmin && (
+        {isOwner && (
           <div style={{ marginTop: '40px', paddingTop: '30px', borderTop: '1px solid #e0e0e0' }}>
             <h3 style={{ color: '#dc2626', marginBottom: '10px' }}>⚠️ Danger Zone</h3>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
@@ -856,8 +856,10 @@ const EventDetails: React.FC = () => {
                 <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="form-select">
                   <option value="member">Member</option>
                   <option value="manager">Manager</option>
-                  <option value="admin">Admin</option>
                 </select>
+                <p style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
+                  Note: Only one Owner per event is allowed. Owner role cannot be transferred.
+                </p>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Update Role</button>
