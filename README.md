@@ -23,7 +23,7 @@ Event management system with authentication and real-time tracking.
 ### 1. Install dependencies:
 ```bash
 npm install
-cd client && npm install
+cd client ; npm install
 ```
 
 ### 2. Configure environment:

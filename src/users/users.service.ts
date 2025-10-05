@@ -4,6 +4,8 @@ import { Repository, MoreThan } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ChangeEmailDto } from './dto/change-email.dto';
+import { RequestPasswordChangeDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -252,7 +254,7 @@ export class UsersService {
     return { message: 'Email updated successfully' };
   }
 
-  async changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<{ message: string }> {
+  async changePassword(userId: string, changePasswordDto: RequestPasswordChangeDto): Promise<{ message: string }> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
 
     if (!user) {
