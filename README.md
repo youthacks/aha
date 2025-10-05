@@ -29,27 +29,28 @@ cd client ; npm install
 ### 2. Configure environment:
 Create a `.env` file in the root directory:
 ```env
-DATABASE_HOST=localhost
-DATABASE_PORT=5432
-DATABASE_USER=postgres
-DATABASE_PASSWORD=your_password
-DATABASE_NAME=aha_v2
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_DATABASE=aha
 
-JWT_SECRET=your-secret-key
-JWT_EXPIRATION=24h
+JWT_SECRET=your-secret-key-change-this-in-production
+JWT_EXPIRES_IN=1d
+
+NODE_ENV=development
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
-SMTP_FROM=AHA - Token System <your-email@gmail.com>
-
+SMTP_FROM=AHA <your-email@gmail.com>
 APP_URL=http://localhost:3001
 ```
 
 ### 3. Create database:
 ```sql
-CREATE DATABASE aha_v2;
+CREATE DATABASE aha;
 ```
 
 ### 4. Start the application:
@@ -58,7 +59,7 @@ CREATE DATABASE aha_v2;
 npm run start:dev
 
 # Frontend (runs on port 3001)
-cd client; npm start
+cd client ; npm start
 ```
 
 ## Database Management
@@ -93,3 +94,24 @@ node wipe-db.js
 ### Admin
 - `POST /reset-database` - Reset entire database
 - `GET /health` - Health check
+
+## Project Structure
+
+```
+aha/
+├── src/                      # Backend (NestJS)
+│   ├── auth/                 # Authentication module
+│   ├── users/                # User management
+│   ├── events/               # Events & members
+│   ├── email/                # Email service
+│   └── main.ts               # App entry point
+├── client/                   # Frontend (React)
+│   └── src/
+│       ├── pages/            # Page components
+│       ├── components/       # Reusable components
+│       ├── services/         # API services
+│       └── context/          # React context
+├── migrate-admin-to-owner.js # Database migration script
+├── API_DOCUMENTATION.md      # Complete mobile API docs
+└── README.md                 # This file
+```

@@ -12,7 +12,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "typeorm": "typeorm-ts-node-commonjs",
-    "db:reset": "psql -U postgres -c \"DROP DATABASE IF EXISTS aha_v2;\" && psql -U postgres -c \"CREATE DATABASE aha_v2;\""
+    "db:reset": "psql -U postgres -c \"DROP DATABASE IF EXISTS aha;\" && psql -U postgres -c \"CREATE DATABASE aha;\""
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
