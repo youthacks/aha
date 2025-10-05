@@ -145,4 +145,9 @@ export const eventsService = {
     const response = await api.delete(`/events/${eventSlug}`);
     return response.data;
   },
+
+  updateEventSettings: async (eventSlug: string, data: { name?: string; joinCode?: string; description?: string }) => {
+    const response = await api.patch(`/events/${eventSlug}/settings`, data);
+    return response.data;
+  },
 };

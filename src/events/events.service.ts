@@ -7,6 +7,7 @@ import { Shop } from './entities/shop.entity';
 import { Transaction } from './entities/transaction.entity';
 import { CreateEventDto, JoinEventDto, UpdateTokensDto, PromoteMemberDto } from './dto/event.dto';
 import { CreateStationDto, PurchaseDto, UpdateStationDto } from './dto/station.dto';
+import { UpdateEventSettingsDto } from './dto/update-event-settings.dto';
 
 @Injectable()
 export class EventsService {
@@ -752,5 +753,80 @@ export class EventsService {
     await this.shopRepository.delete({ eventId });
     await this.membersRepository.delete({ eventId });
     await this.eventsRepository.delete({ id: eventId });
+  }
+
+  async updateEventSettings(eventId: string, userId: string, updateDto: UpdateEventSettingsDto): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { id: eventId },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    // Only the owner (admin) can update event settings
+    const membership = await this.membersRepository.findOne({
+      where: { eventId, userId },
+    });
+
+    if (!membership || membership.role !== EventRole.ADMIN) {
+      throw new ForbiddenException('Only the event admin can update event settings');
+    }
+
+    // If updating name, check for conflicts and update slug
+    if (updateDto.name && updateDto.name !== event.name) {
+      const existingByName = await this.eventsRepository.findOne({
+        where: { name: updateDto.name },
+      });
+
+      if (existingByName && existingByName.id !== eventId) {
+        throw new ConflictException('An event with this name already exists');
+      }
+
+      const newSlug = this.generateSlug(updateDto.name);
+      const existingBySlug = await this.eventsRepository.findOne({
+        where: { slug: newSlug },
+      });
+
+      if (existingBySlug && existingBySlug.id !== eventId) {
+        throw new ConflictException('An event with a similar name already exists');
+      }
+
+      event.name = updateDto.name;
+      event.slug = newSlug;
+    }
+
+    // If updating join code, check for conflicts
+    if (updateDto.joinCode && updateDto.joinCode !== event.joinCode) {
+      const normalizedCode = updateDto.joinCode.toUpperCase();
+      const existingByCode = await this.eventsRepository.findOne({
+        where: { joinCode: normalizedCode },
+      });
+
+      if (existingByCode && existingByCode.id !== eventId) {
+        throw new ConflictException('This join code is already in use by another event');
+      }
+
+      event.joinCode = normalizedCode;
+    }
+
+    // Update description if provided
+    if (updateDto.description !== undefined) {
+      event.description = updateDto.description;
+    }
+
+    return this.eventsRepository.save(event);
+  }
+
+  async updateEventSettingsBySlug(eventSlug: string, userId: string, updateDto: UpdateEventSettingsDto): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { slug: eventSlug.toLowerCase() },
+    });
+
+    if (!event) {
+      throw new NotFoundException('Event not found');
+    }
+
+    return this.updateEventSettings(event.id, userId, updateDto);
   }
 }

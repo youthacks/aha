@@ -10,6 +10,9 @@ import BigScreenMode from './pages/BigScreenMode';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Settings from './pages/Settings';
+import VerifyEmailChange from './pages/VerifyEmailChange';
+import ConfirmPasswordChange from './pages/ConfirmPasswordChange';
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -29,6 +32,9 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email-change" element={<PrivateRoute><VerifyEmailChange /></PrivateRoute>} />
+      <Route path="/confirm-password-change" element={<PrivateRoute><ConfirmPasswordChange /></PrivateRoute>} />
+      <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/events/:eventId" element={<PrivateRoute><EventDetails /></PrivateRoute>} />
       <Route path="/events/:eventId/bigscreen" element={<PrivateRoute><BigScreenMode /></PrivateRoute>} />

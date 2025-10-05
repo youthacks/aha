@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Put, Delete, Patch } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateEventDto, JoinEventDto, UpdateTokensDto, PromoteMemberDto } from './dto/event.dto';
 import { CreateStationDto, PurchaseDto, UpdateStationDto } from './dto/station.dto';
+import { UpdateEventSettingsDto } from './dto/update-event-settings.dto';
 
 @Controller('events')
 @UseGuards(JwtAuthGuard)
@@ -98,6 +99,15 @@ export class EventsController {
   @Get(':eventSlug/transactions/all')
   async getAllTransactions(@Param('eventSlug') eventSlug: string, @Request() req) {
     return this.eventsService.getAllTransactionsBySlug(eventSlug, req.user.id);
+  }
+
+  @Patch(':eventSlug/settings')
+  async updateEventSettings(
+    @Param('eventSlug') eventSlug: string,
+    @Request() req,
+    @Body() updateDto: UpdateEventSettingsDto,
+  ) {
+    return this.eventsService.updateEventSettingsBySlug(eventSlug, req.user.id, updateDto);
   }
 
   @Post(':eventSlug/redeem')

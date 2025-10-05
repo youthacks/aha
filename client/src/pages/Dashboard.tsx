@@ -107,9 +107,14 @@ const Dashboard: React.FC = () => {
       <div className="dashboard-card">
         <div className="dashboard-header">
           <h1>Dashboard</h1>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={() => navigate('/settings')} className="btn-secondary" style={{ padding: '10px 20px' }}>
+              ⚙️ Settings
+            </button>
+            <button onClick={handleLogout} className="btn-logout">
+              Logout
+            </button>
+          </div>
         </div>
 
         <div className="user-info">

@@ -141,4 +141,97 @@ export class UsersService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async requestEmailChange(userId: string, newEmail: string, token: string): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if new email is already taken
+    const existingUser = await this.findByEmail(newEmail);
+    if (existingUser) {
+      throw new ConflictException('Email already in use');
+    }
+
+    const emailChangeTokenExpiry = new Date();
+    emailChangeTokenExpiry.setHours(emailChangeTokenExpiry.getHours() + 1);
+
+    user.pendingEmail = newEmail;
+    user.emailChangeToken = token;
+    user.emailChangeTokenExpiry = emailChangeTokenExpiry;
+
+    return this.usersRepository.save(user);
+  }
+
+  async verifyEmailChange(userId: string, token: string): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: {
+        id: userId,
+        emailChangeToken: token,
+        emailChangeTokenExpiry: MoreThan(new Date()),
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired email change token');
+    }
+
+    if (!user.pendingEmail) {
+      throw new BadRequestException('No pending email change');
+    }
+
+    user.email = user.pendingEmail;
+    user.pendingEmail = null;
+    user.emailChangeToken = null;
+    user.emailChangeTokenExpiry = null;
+    user.isEmailVerified = true;
+
+    return this.usersRepository.save(user);
+  }
+
+  async requestPasswordChange(userId: string, currentPassword: string, token: string): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new BadRequestException('Current password is incorrect');
+    }
+
+    const passwordChangeTokenExpiry = new Date();
+    passwordChangeTokenExpiry.setHours(passwordChangeTokenExpiry.getHours() + 1);
+
+    user.passwordChangeToken = token;
+    user.passwordChangeTokenExpiry = passwordChangeTokenExpiry;
+
+    return this.usersRepository.save(user);
+  }
+
+  async verifyPasswordChange(userId: string, token: string, newPassword: string): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: {
+        id: userId,
+        passwordChangeToken: token,
+        passwordChangeTokenExpiry: MoreThan(new Date()),
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid or expired password change token');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.passwordChangeToken = null;
+    user.passwordChangeTokenExpiry = null;
+
+    return this.usersRepository.save(user);
+  }
 }

@@ -32,6 +32,21 @@ export class User {
   @Column({ nullable: true })
   resetPasswordExpiry: Date;
 
+  @Column({ nullable: true })
+  pendingEmail: string;
+
+  @Column({ nullable: true })
+  emailChangeToken: string;
+
+  @Column({ nullable: true })
+  emailChangeTokenExpiry: Date;
+
+  @Column({ nullable: true })
+  passwordChangeToken: string;
+
+  @Column({ nullable: true })
+  passwordChangeTokenExpiry: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

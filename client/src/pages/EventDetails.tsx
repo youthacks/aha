@@ -55,6 +55,11 @@ const EventDetails: React.FC = () => {
   const [showScannerModal, setShowScannerModal] = useState(false);
   const [scannerInput, setScannerInput] = useState('');
 
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [settingsEventName, setSettingsEventName] = useState('');
+  const [settingsJoinCode, setSettingsJoinCode] = useState('');
+  const [settingsDescription, setSettingsDescription] = useState('');
+
   const loadEventData = useCallback(async (silent = false) => {
     try {
       const data = await eventsService.getEventDetails(eventId!);
@@ -272,6 +277,25 @@ const EventDetails: React.FC = () => {
     }
   };
 
+  const handleUpdateEventSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      await eventsService.updateEventSettings(eventId!, {
+        name: settingsEventName !== event.name ? settingsEventName : undefined,
+        joinCode: settingsJoinCode !== event.joinCode ? settingsJoinCode : undefined,
+        description: settingsDescription,
+      });
+      setSuccess('Event settings updated successfully!');
+      setShowSettingsModal(false);
+      await loadEventData(true);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update event settings');
+    }
+  };
+
   const openTokenModal = (member: EventMember) => {
     setSelectedMember(member);
     setTokenAmount(0);
@@ -303,6 +327,13 @@ const EventDetails: React.FC = () => {
     setShowDeleteStationModal(true);
   };
 
+  const openSettingsModal = () => {
+    setSettingsEventName(event.name);
+    setSettingsJoinCode(event.joinCode);
+    setSettingsDescription(event.description || '');
+    setShowSettingsModal(true);
+  };
+
   if (loading) {
     return <div className="dashboard-container"><div className="loading">Loading event...</div></div>;
   }
@@ -324,6 +355,26 @@ const EventDetails: React.FC = () => {
             <h1 style={{ marginTop: '10px' }}>{event.name}</h1>
             <p style={{ color: '#666', fontSize: '14px' }}>
               Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '16px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+              {isAdmin && (
+                <button
+                  onClick={openSettingsModal}
+                  style={{
+                    marginLeft: '10px',
+                    padding: '4px 12px',
+                    fontSize: '12px',
+                    background: '#667eea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#5a67d8'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#667eea'}
+                >
+                  ⚙️ Settings
+                </button>
+              )}
             </p>
           </div>
           <div style={{ textAlign: 'right' }}>
@@ -1150,6 +1201,50 @@ const EventDetails: React.FC = () => {
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Redeem Receipt</button>
                 <button type="button" onClick={() => setShowScannerModal(false)} className="btn-secondary">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSettingsModal && (
+        <div className="modal-overlay" onClick={() => setShowSettingsModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <h2>Event Settings</h2>
+            <form onSubmit={handleUpdateEventSettings}>
+              <div className="form-group">
+                <label>Event Name</label>
+                <input
+                  type="text"
+                  value={settingsEventName}
+                  onChange={(e) => setSettingsEventName(e.target.value)}
+                  placeholder="Enter event name"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Join Code</label>
+                <input
+                  type="text"
+                  value={settingsJoinCode}
+                  onChange={(e) => setSettingsJoinCode(e.target.value)}
+                  placeholder="Enter join code"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  value={settingsDescription}
+                  onChange={(e) => setSettingsDescription(e.target.value)}
+                  placeholder="Enter event description"
+                  rows={3}
+                  style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '2px solid #e0e0e0' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button type="submit" className="btn-primary">Save Settings</button>
+                <button type="button" onClick={() => setShowSettingsModal(false)} className="btn-secondary">Cancel</button>
               </div>
             </form>
           </div>
