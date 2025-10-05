@@ -399,7 +399,7 @@ const EventDetails: React.FC = () => {
           </button>
           {canManage && (
             <button className={activeTab === 'global-history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('global-history')}>
-              Global History
+              Transactions
             </button>
           )}
           <button className={activeTab === 'history' ? 'tab active' : 'tab'} onClick={() => setActiveTab('history')}>
@@ -643,7 +643,7 @@ const EventDetails: React.FC = () => {
 
           {activeTab === 'global-history' && canManage && (
             <div>
-              <h3 style={{ marginBottom: '15px' }}>📊 Global Transaction History</h3>
+              <h3 style={{ marginBottom: '15px' }}>💳 All Transactions</h3>
               <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
                 View all transactions across all members in this event
               </p>
