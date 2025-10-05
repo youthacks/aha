@@ -20,6 +20,7 @@ const EventDetails: React.FC = () => {
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState<EventMember | null>(null);
   const [tokenAmount, setTokenAmount] = useState(0);
+  const [tokenOperation, setTokenOperation] = useState<'add' | 'remove'>('add');
 
   const [showStationModal, setShowStationModal] = useState(false);
   const [stationName, setStationName] = useState('');
@@ -97,10 +98,12 @@ const EventDetails: React.FC = () => {
     if (!selectedMember) return;
 
     try {
-      await eventsService.updateTokens(eventId!, selectedMember.userId, tokenAmount);
+      const finalAmount = tokenOperation === 'remove' ? -tokenAmount : tokenAmount;
+      await eventsService.updateTokens(eventId!, selectedMember.userId, finalAmount);
       setSuccess(`Updated tokens for ${selectedMember.name}`);
       setShowTokenModal(false);
       setTokenAmount(0);
+      setTokenOperation('add');
       setSelectedMember(null);
       await loadEventData(true); // Immediate refresh after action
     } catch (err: any) {
@@ -245,6 +248,7 @@ const EventDetails: React.FC = () => {
   const openTokenModal = (member: EventMember) => {
     setSelectedMember(member);
     setTokenAmount(0);
+    setTokenOperation('add');
     setShowTokenModal(true);
   };
 
@@ -638,14 +642,21 @@ const EventDetails: React.FC = () => {
             <p style={{ color: '#666', marginBottom: '20px' }}>Current: {selectedMember.tokens} 🪙</p>
             <form onSubmit={handleUpdateTokens}>
               <div className="form-group">
-                <label>Token Amount (+ to add, - to remove)</label>
+                <label>Token Amount</label>
                 <input
                   type="number"
                   value={tokenAmount}
                   onChange={(e) => setTokenAmount(parseInt(e.target.value))}
-                  placeholder="Enter amount (e.g., 10 or -5)"
+                  placeholder="Enter amount (e.g., 10)"
                   required
                 />
+              </div>
+              <div className="form-group">
+                <label>Operation</label>
+                <select value={tokenOperation} onChange={(e) => setTokenOperation(e.target.value as 'add' | 'remove')} className="form-select">
+                  <option value="add">Add Tokens</option>
+                  <option value="remove">Remove Tokens</option>
+                </select>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button type="submit" className="btn-primary">Update</button>

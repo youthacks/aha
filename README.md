@@ -58,7 +58,7 @@ CREATE DATABASE aha_v2;
 npm run start:dev
 
 # Frontend (runs on port 3001)
-cd client && npm start
+cd client; npm start
 ```
 
 ## Database Management
