@@ -20,7 +20,7 @@ const VerifyEmailChange: React.FC = () => {
       }
 
       try {
-        const response = await api.post('/users/verify-email-change', { token });
+        await api.post('/users/verify-email-change', { token });
         setSuccess(true);
         setTimeout(() => {
           navigate('/dashboard');
@@ -71,4 +71,3 @@ const VerifyEmailChange: React.FC = () => {
 };
 
 export default VerifyEmailChange;
-
