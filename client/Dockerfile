@@ -21,4 +21,4 @@ RUN npm install -g serve
 EXPOSE 3000
 
 # Serve the built application
-CMD ["serve", "-s", "build", "-l", "3000", "--no-request-logging"]
+CMD ["serve", "-s", "build", "-l", "3000", "--disable-host-check"]
