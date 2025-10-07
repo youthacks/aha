@@ -12,6 +12,7 @@ RUN npm install
 COPY . .
 
 # Build the application with environment variable
+ENV REACT_APP_API_URL
 RUN npm run build
 
 # Install serve to run the production build
