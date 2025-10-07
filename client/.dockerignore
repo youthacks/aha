@@ -2,6 +2,11 @@ node_modules
 build
 npm-debug.log
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.production
 .git
 .gitignore
 README.md
@@ -9,4 +14,3 @@ README.md
 .idea
 coverage
 .DS_Store
-
