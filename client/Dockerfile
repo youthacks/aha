@@ -1,5 +1,8 @@
 FROM node:20-alpine
 
+# Accept build argument for API URL
+ENV REACT_APP_API_URL=https://aha.youthacks.org/api
+
 WORKDIR /app
 
 # Copy package files
