@@ -20,5 +20,5 @@ RUN npm install -g serve
 # Expose the port
 EXPOSE 3000
 
-# Serve the built application
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Serve the built application with SPA routing support
+CMD ["serve", "-s", "build", "-l", "3000", "-n"]
