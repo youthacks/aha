@@ -22,3 +22,4 @@ EXPOSE 3000
 
 # Serve the built application
 CMD ["serve", "-s", "build", "-l", "3000"]
+--disable-host-check
