@@ -1,8 +1,5 @@
 FROM node:20-alpine
 
-# Accept build argument for API URL
-ENV REACT_APP_API_URL=http://api.aha.youthacks.duckdns.org
-
 WORKDIR /app
 
 # Copy package files
@@ -15,7 +12,6 @@ RUN npm install
 COPY . .
 
 # Build the application with environment variable
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
 RUN npm run build
 
 # Install serve to run the production build
