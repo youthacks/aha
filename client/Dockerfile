@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
 # Accept build argument for API URL
-ARG REACT_APP_API_URL=http://api.aha.youthacks.duckdns.org
+ENV REACT_APP_API_URL=http://api.aha.youthacks.duckdns.org
 
 WORKDIR /app
 
