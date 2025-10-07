@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { eventsService, Event } from '../services/events.service';
 import { authService } from '../services/api';
+import EventQRCode from '../components/EventQRCode';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -185,7 +186,7 @@ const Dashboard: React.FC = () => {
                       <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                         <h4>{event.name}</h4>
                         <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                          Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+                          Join Code: <EventQRCode joinCode={event.joinCode} eventName={event.name} size={200} />
                         </p>
                         <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
@@ -211,7 +212,7 @@ const Dashboard: React.FC = () => {
                       <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                         <h4>{event.name}</h4>
                         <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                          Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+                          Join Code: <EventQRCode joinCode={event.joinCode} eventName={event.name} size={200} />
                         </p>
                         <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>
@@ -237,7 +238,7 @@ const Dashboard: React.FC = () => {
                       <div key={event.id} className="event-card" onClick={() => navigate(`/events/${event.slug}`)}>
                         <h4>{event.name}</h4>
                         <p style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
-                          Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '14px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+                          Join Code: <EventQRCode joinCode={event.joinCode} eventName={event.name} size={200} />
                         </p>
                         <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span className={`role-badge role-${event.myRole}`}>{event.myRole}</span>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventsService, EventMember, Shop, Transaction, GlobalTransaction } from '../services/events.service';
+import EventQRCode from '../components/EventQRCode';
 
 const EventDetails: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
@@ -354,7 +355,7 @@ const EventDetails: React.FC = () => {
             <button onClick={() => navigate('/dashboard')} className="back-button">← Back</button>
             <h1 style={{ marginTop: '10px' }}>{event.name}</h1>
             <p style={{ color: '#666', fontSize: '14px' }}>
-              Join Code: <strong style={{ fontFamily: 'monospace', fontSize: '16px', letterSpacing: '1px' }}>{event.joinCode}</strong>
+              Join Code: <EventQRCode joinCode={event.joinCode} eventName={event.name} size={200} />
               {isOwner && (
                 <button
                   onClick={openSettingsModal}
