@@ -5,17 +5,17 @@ services:
     image: postgres:15-alpine
     container_name: aha-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: aha
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - aha-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,16 +30,18 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      DB_DATABASE: aha
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
-      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
-      EMAIL_PORT: ${EMAIL_PORT:-587}
-      EMAIL_USER: ${EMAIL_USER:-your-email@gmail.com}
-      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-your-email-password}
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@aha-system.com}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_DATABASE: ${DB_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      NODE_ENV: ${NODE_ENV}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      APP_URL: ${APP_URL}
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,7 +57,7 @@ services:
     ports:
       - "8080:3000"
     environment:
-      REACT_APP_API_URL: http://localhost:3000
+      REACT_APP_API_URL: ${APP_URL}
     depends_on:
       - backend
     networks:
@@ -68,4 +70,3 @@ volumes:
 networks:
   aha-network:
     driver: bridge
-
