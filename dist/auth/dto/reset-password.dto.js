@@ -27,6 +27,11 @@ __decorate([
 ], ResetPasswordDto.prototype, "email", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ResetPasswordDto.prototype, "token", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.MinLength)(6),
     __metadata("design:type", String)
 ], ResetPasswordDto.prototype, "newPassword", void 0);

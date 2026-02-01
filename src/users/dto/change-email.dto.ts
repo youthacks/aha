@@ -1,16 +1,12 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class ChangeEmailDto {
   @IsEmail()
   @IsNotEmpty()
   newEmail: string;
 }
-
 export class VerifyEmailChangeDto {
-  @IsEmail()
-  @IsNotEmpty()
-  newEmail: string;
-
+  @IsString()
   @IsNotEmpty()
   token: string;
 }

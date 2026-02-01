@@ -23,11 +23,7 @@ class VerifyEmailChangeDto {
 }
 exports.VerifyEmailChangeDto = VerifyEmailChangeDto;
 __decorate([
-    (0, class_validator_1.IsEmail)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], VerifyEmailChangeDto.prototype, "newEmail", void 0);
-__decorate([
+    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], VerifyEmailChangeDto.prototype, "token", void 0);
