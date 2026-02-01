@@ -61,7 +61,7 @@ let EmailService = class EmailService {
         });
     }
     async sendVerificationEmail(email, token, firstName) {
-        const appUrl = this.configService.get('APP_URL')?.replace(/\/$/, '') || '';
+        const appUrl = (this.configService.get('APP_URL') || 'https://aha.youthacks.org').replace(/\/$/, '');
         const verificationUrl = `${appUrl}/verify-email?email=${encodeURIComponent(email)}&token=${token}`;
         const htmlContent = `
       <!DOCTYPE html>
@@ -136,7 +136,7 @@ If you didn't create an account, you can safely ignore this email.
         }
     }
     async sendPasswordResetEmail(email, token, firstName) {
-        const appUrl = this.configService.get('APP_URL')?.replace(/\/$/, '') || '';
+        const appUrl = (this.configService.get('APP_URL') || 'https://aha.youthacks.org').replace(/\/$/, '');
         const resetUrl = `${appUrl}/reset-password?email=${encodeURIComponent(email)}&token=${token}`;
         const htmlContent = `
       <!DOCTYPE html>
@@ -217,7 +217,7 @@ If you didn't request a password reset, please ignore this email.
         return crypto.randomBytes(32).toString('hex');
     }
     async sendEmailChangeVerification(newEmail, token, firstName) {
-        const appUrl = this.configService.get('APP_URL');
+        const appUrl = (this.configService.get('APP_URL') || 'https://aha.youthacks.org').replace(/\/$/, '');
         const verificationUrl = `${appUrl}/verify-email-change?token=${token}`;
         const htmlContent = `
       <!DOCTYPE html>
@@ -295,7 +295,7 @@ If you didn't request this change, please ignore this email.
         }
     }
     async sendPasswordChangeConfirmation(email, token, firstName) {
-        const appUrl = this.configService.get('APP_URL')?.replace(/\/$/, '') || '';
+        const appUrl = (this.configService.get('APP_URL') || 'https://aha.youthacks.org').replace(/\/$/, '');
         const changeUrl = `${appUrl}/confirm-password-change?token=${token}`;
         const htmlContent = `
       <!DOCTYPE html>
