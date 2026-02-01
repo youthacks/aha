@@ -38,6 +38,9 @@ DB_DATABASE=aha
 JWT_SECRET=your-secret-key-change-this-in-production
 JWT_EXPIRES_IN=1d
 
+# Required to access admin/debug endpoints
+ADMIN_API_KEY=your-strong-admin-key
+
 NODE_ENV=development
 
 SMTP_HOST=smtp.gmail.com
@@ -92,7 +95,7 @@ node wipe-db.js
 - `POST /events/:id/unarchive` - Unarchive event
 
 ### Admin
-- `POST /reset-database` - Reset entire database
+- `POST /reset-database` - Reset entire database (requires X-Admin-Key header)
 - `GET /health` - Health check
 
 ## Project Structure

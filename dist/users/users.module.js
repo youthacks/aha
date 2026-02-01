@@ -13,6 +13,7 @@ const users_service_1 = require("./users.service");
 const users_controller_1 = require("./users.controller");
 const user_entity_1 = require("./entities/user.entity");
 const email_module_1 = require("../email/email.module");
+const admin_key_guard_1 = require("../auth/guards/admin-key.guard");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
@@ -20,7 +21,7 @@ exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
         imports: [typeorm_1.TypeOrmModule.forFeature([user_entity_1.User]), email_module_1.EmailModule],
         controllers: [users_controller_1.UsersController],
-        providers: [users_service_1.UsersService],
+        providers: [users_service_1.UsersService, admin_key_guard_1.AdminKeyGuard],
         exports: [users_service_1.UsersService],
     })
 ], UsersModule);

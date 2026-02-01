@@ -16,6 +16,7 @@ exports.UsersController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
+const admin_key_guard_1 = require("../auth/guards/admin-key.guard");
 const email_service_1 = require("../email/email.service");
 const change_email_dto_1 = require("./dto/change-email.dto");
 const change_password_dto_1 = require("./dto/change-password.dto");
@@ -54,9 +55,6 @@ let UsersController = class UsersController {
         };
     }
     async clearAll() {
-        if (process.env.NODE_ENV !== 'development') {
-            return { error: 'This endpoint is only available in development mode' };
-        }
         const count = await this.usersService.count();
         await this.usersService.deleteAll();
         return {
@@ -101,6 +99,7 @@ let UsersController = class UsersController {
 };
 exports.UsersController = UsersController;
 __decorate([
+    (0, common_1.UseGuards)(admin_key_guard_1.AdminKeyGuard),
     (0, common_1.Get)('debug'),
     __param(0, (0, common_1.Query)('email')),
     __metadata("design:type", Function),
@@ -108,12 +107,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "debug", null);
 __decorate([
+    (0, common_1.UseGuards)(admin_key_guard_1.AdminKeyGuard),
     (0, common_1.Get)('list'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "listAll", null);
 __decorate([
+    (0, common_1.UseGuards)(admin_key_guard_1.AdminKeyGuard),
     (0, common_1.Delete)('clear-all'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

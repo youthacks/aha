@@ -1,6 +1,7 @@
 import { Controller, Get, Query, Delete, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AdminKeyGuard } from '../auth/guards/admin-key.guard';
 import { EmailService } from '../email/email.service';
 import { ChangeEmailDto, VerifyEmailChangeDto } from './dto/change-email.dto';
 import { RequestPasswordChangeDto, ChangePasswordDto } from './dto/change-password.dto';
@@ -12,6 +13,7 @@ export class UsersController {
     private emailService: EmailService,
   ) {}
 
+  @UseGuards(AdminKeyGuard)
   @Get('debug')
   async debug(@Query('email') email: string) {
     const user = await this.usersService.findByEmail(email);
@@ -30,6 +32,7 @@ export class UsersController {
     };
   }
 
+  @UseGuards(AdminKeyGuard)
   @Get('list')
   async listAll() {
     const users = await this.usersService.findAll();
@@ -47,12 +50,9 @@ export class UsersController {
     };
   }
 
+  @UseGuards(AdminKeyGuard)
   @Delete('clear-all')
   async clearAll() {
-    if (process.env.NODE_ENV !== 'development') {
-      return { error: 'This endpoint is only available in development mode' };
-    }
-
     const count = await this.usersService.count();
     await this.usersService.deleteAll();
 

@@ -35,13 +35,8 @@ export declare class UsersController {
         }[];
     }>;
     clearAll(): Promise<{
-        error: string;
-        message?: undefined;
-        success?: undefined;
-    } | {
         message: string;
         success: boolean;
-        error?: undefined;
     }>;
     requestEmailChange(req: any, changeEmailDto: ChangeEmailDto): Promise<{
         message: string;

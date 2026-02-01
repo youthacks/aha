@@ -16,6 +16,7 @@ export declare class EventsService {
     generateJoinCode(): string;
     generateReceiptCode(): string;
     createEvent(userId: string, createEventDto: CreateEventDto): Promise<Event>;
+    backfillJoinCodes(): Promise<number>;
     joinEvent(userId: string, joinEventDto: JoinEventDto): Promise<EventMember>;
     getMyEvents(userId: string): Promise<any[]>;
     getMyArchivedEvents(userId: string): Promise<any[]>;

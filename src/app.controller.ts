@@ -1,6 +1,7 @@
-import { Controller, Get, Post, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, HttpCode, UseGuards } from '@nestjs/common';
 import { UsersService } from './users/users.service';
 import { EventsService } from './events/events.service';
+import { AdminKeyGuard } from './auth/guards/admin-key.guard';
 
 @Controller()
 export class AppController {
@@ -41,6 +42,7 @@ export class AppController {
 
   @Post('reset-database')
   @HttpCode(200)
+  @UseGuards(AdminKeyGuard)
   async resetDatabase() {
     await this.eventsService.deleteAll();
     await this.usersService.deleteAll();

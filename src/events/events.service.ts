@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { EventMember, EventRole } from './entities/event-member.entity';
 import { Shop } from './entities/shop.entity';
@@ -97,6 +97,30 @@ export class EventsService {
     });
 
     return savedEvent;
+  }
+
+  async backfillJoinCodes(): Promise<number> {
+    const events = await this.eventsRepository.find({ where: { joinCode: IsNull() } });
+    if (events.length === 0) {
+      return 0;
+    }
+
+    let updatedCount = 0;
+    for (const event of events) {
+      let joinCode = this.generateJoinCode();
+      let existingByCode = await this.eventsRepository.findOne({ where: { joinCode } });
+
+      while (existingByCode) {
+        joinCode = this.generateJoinCode();
+        existingByCode = await this.eventsRepository.findOne({ where: { joinCode } });
+      }
+
+      event.joinCode = joinCode;
+      await this.eventsRepository.save(event);
+      updatedCount++;
+    }
+
+    return updatedCount;
   }
 
   async joinEvent(userId: string, joinEventDto: JoinEventDto): Promise<EventMember> {

@@ -13,7 +13,7 @@ export class Event {
   @Column({ unique: true })
   slug: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: true })
   joinCode: string;
 
   @Column({ nullable: true })

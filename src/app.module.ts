@@ -11,6 +11,7 @@ import { Event } from './events/entities/event.entity';
 import { EventMember } from './events/entities/event-member.entity';
 import { Shop } from './events/entities/shop.entity';
 import { Transaction } from './events/entities/transaction.entity';
+import { AdminKeyGuard } from './auth/guards/admin-key.guard';
 
 @Module({
   imports: [
@@ -37,6 +38,6 @@ import { Transaction } from './events/entities/transaction.entity';
     EventsModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [AdminKeyGuard],
 })
 export class AppModule {}

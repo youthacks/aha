@@ -20,6 +20,7 @@ const event_entity_1 = require("./events/entities/event.entity");
 const event_member_entity_1 = require("./events/entities/event-member.entity");
 const shop_entity_1 = require("./events/entities/shop.entity");
 const transaction_entity_1 = require("./events/entities/transaction.entity");
+const admin_key_guard_1 = require("./auth/guards/admin-key.guard");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -49,7 +50,7 @@ exports.AppModule = AppModule = __decorate([
             events_module_1.EventsModule,
         ],
         controllers: [app_controller_1.AppController],
-        providers: [],
+        providers: [admin_key_guard_1.AdminKeyGuard],
     })
 ], AppModule);
 //# sourceMappingURL=app.module.js.map

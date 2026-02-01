@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import QRCode from 'qrcode';
 
 interface EventQRCodeProps {
@@ -12,13 +12,7 @@ const EventQRCode: React.FC<EventQRCodeProps> = ({ joinCode, eventName, size = 2
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    if (showModal && canvasRef.current) {
-      generateQRCode();
-    }
-  }, [showModal, joinCode]);
-
-  const generateQRCode = async () => {
+  const generateQRCode = useCallback(async () => {
     try {
       // Create QR code data that could include app deep link or just the join code
       const qrData = joinCode; // You could also use a deep link like: `myapp://join/${joinCode}`
@@ -48,7 +42,13 @@ const EventQRCode: React.FC<EventQRCodeProps> = ({ joinCode, eventName, size = 2
     } catch (error) {
       console.error('Failed to generate QR code:', error);
     }
-  };
+  }, [joinCode, size]);
+
+  useEffect(() => {
+    if (showModal && canvasRef.current) {
+      generateQRCode();
+    }
+  }, [showModal, generateQRCode]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(joinCode);

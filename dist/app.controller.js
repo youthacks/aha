@@ -13,6 +13,7 @@ exports.AppController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users/users.service");
 const events_service_1 = require("./events/events.service");
+const admin_key_guard_1 = require("./auth/guards/admin-key.guard");
 let AppController = class AppController {
     constructor(usersService, eventsService) {
         this.usersService = usersService;
@@ -76,6 +77,7 @@ __decorate([
 __decorate([
     (0, common_1.Post)('reset-database'),
     (0, common_1.HttpCode)(200),
+    (0, common_1.UseGuards)(admin_key_guard_1.AdminKeyGuard),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

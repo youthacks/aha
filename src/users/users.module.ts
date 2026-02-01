@@ -4,11 +4,12 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 import { EmailModule } from '../email/email.module';
+import { AdminKeyGuard } from '../auth/guards/admin-key.guard';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User]), EmailModule],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, AdminKeyGuard],
   exports: [UsersService],
 })
 export class UsersModule {}

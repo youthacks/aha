@@ -90,6 +90,25 @@ let EventsService = class EventsService {
         });
         return savedEvent;
     }
+    async backfillJoinCodes() {
+        const events = await this.eventsRepository.find({ where: { joinCode: (0, typeorm_2.IsNull)() } });
+        if (events.length === 0) {
+            return 0;
+        }
+        let updatedCount = 0;
+        for (const event of events) {
+            let joinCode = this.generateJoinCode();
+            let existingByCode = await this.eventsRepository.findOne({ where: { joinCode } });
+            while (existingByCode) {
+                joinCode = this.generateJoinCode();
+                existingByCode = await this.eventsRepository.findOne({ where: { joinCode } });
+            }
+            event.joinCode = joinCode;
+            await this.eventsRepository.save(event);
+            updatedCount++;
+        }
+        return updatedCount;
+    }
     async joinEvent(userId, joinEventDto) {
         const event = await this.eventsRepository.findOne({
             where: { joinCode: joinEventDto.slug.toUpperCase() }
