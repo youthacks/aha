@@ -22,18 +22,38 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const normalizeEvents = (payload: unknown): Event[] => {
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    if (payload && typeof payload === 'object') {
+      const candidate = (payload as { events?: Event[]; data?: Event[] }).events ??
+        (payload as { data?: Event[] }).data;
+
+      if (Array.isArray(candidate)) {
+        return candidate;
+      }
+    }
+
+    return [];
+  };
+
   useEffect(() => {
     loadEvents();
   }, []);
 
   const loadEvents = async () => {
+    setError('');
+    setSuccess('');
     try {
       const data = await eventsService.getMyEvents();
-      setEvents(data);
+      setEvents(normalizeEvents(data));
       const archivedData = await eventsService.getMyArchivedEvents();
-      setArchivedEvents(archivedData);
+      setArchivedEvents(normalizeEvents(archivedData));
     } catch (err) {
       console.error('Failed to load events', err);
+      setError('Failed to load events. Please try again.');
     } finally {
       setLoading(false);
     }
