@@ -52,4 +52,10 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column({ default: false })
+  youthacksEnabled: boolean;
+
+  @Column({ nullable: true })
+  youthacksId: string;
 }

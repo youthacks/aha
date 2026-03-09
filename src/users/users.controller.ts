@@ -5,6 +5,7 @@ import { AdminKeyGuard } from '../auth/guards/admin-key.guard';
 import { EmailService } from '../email/email.service';
 import { ChangeEmailDto, VerifyEmailChangeDto } from './dto/change-email.dto';
 import { RequestPasswordChangeDto, ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateOAuthDto } from './dto/update-oauth.dto';
 
 @Controller('users')
 export class UsersController {
@@ -127,6 +128,33 @@ export class UsersController {
 
     return {
       message: 'Password changed successfully',
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('settings')
+  async getSettings(@Request() req) {
+    const user = await this.usersService.findById(req.user.userId);
+
+    return {
+      youthacksEnabled: user.youthacksEnabled || false,
+      youthacksId: user.youthacksId || null,
+    };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('settings/youthacks')
+  async updateYouthacksSettings(@Request() req, @Body() dto: UpdateOAuthDto) {
+    const user = await this.usersService.setYouthacksSettings(
+      req.user.userId,
+      dto.enabled,
+      dto.youthacksId,
+    );
+
+    return {
+      message: 'Youthacks OAuth settings updated',
+      youthacksEnabled: user.youthacksEnabled,
+      youthacksId: user.youthacksId,
     };
   }
 }

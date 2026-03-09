@@ -16,4 +16,6 @@ export declare class User {
     passwordChangeTokenExpiry: Date;
     createdAt: Date;
     updatedAt: Date;
+    youthacksEnabled: boolean;
+    youthacksId: string;
 }

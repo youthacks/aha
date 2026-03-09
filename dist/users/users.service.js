@@ -218,6 +218,15 @@ let UsersService = class UsersService {
         user.passwordChangeTokenExpiry = null;
         return this.usersRepository.save(user);
     }
+    async setYouthacksSettings(userId, enabled, youthacksId) {
+        const user = await this.findById(userId);
+        if (!user) {
+            throw new common_1.NotFoundException('User not found');
+        }
+        user.youthacksEnabled = enabled;
+        user.youthacksId = youthacksId ?? null;
+        return this.usersRepository.save(user);
+    }
     async changeEmail(userId, changeEmailDto) {
         const user = await this.usersRepository.findOne({ where: { id: userId } });
         if (!user) {
@@ -247,6 +256,20 @@ let UsersService = class UsersService {
         user.password = hashedNewPassword;
         await this.usersRepository.save(user);
         return { message: 'Password updated successfully' };
+    }
+    async createOAuthUser(email, firstName, lastName) {
+        const existingUser = await this.usersRepository.findOne({ where: { email } });
+        if (existingUser) {
+            return existingUser;
+        }
+        const user = this.usersRepository.create({
+            email,
+            password: Math.random().toString(36).slice(-12),
+            firstName,
+            lastName,
+            isEmailVerified: true,
+        });
+        return this.usersRepository.save(user);
     }
 };
 exports.UsersService = UsersService;

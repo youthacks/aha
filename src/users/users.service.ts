@@ -231,6 +231,19 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async setYouthacksSettings(userId: string, enabled: boolean, youthacksId?: string): Promise<User> {
+    const user = await this.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.youthacksEnabled = enabled;
+    user.youthacksId = youthacksId ?? null;
+
+    return this.usersRepository.save(user);
+  }
+
   async changeEmail(userId: string, changeEmailDto: ChangeEmailDto): Promise<{ message: string }> {
     const user = await this.usersRepository.findOne({ where: { id: userId } });
 
@@ -273,5 +286,24 @@ export class UsersService {
     await this.usersRepository.save(user);
 
     return { message: 'Password updated successfully' };
+  }
+
+  // Create a user for OAuth flows (no password), mark as verified
+  async createOAuthUser(email: string, firstName?: string, lastName?: string): Promise<User> {
+    const existingUser = await this.usersRepository.findOne({ where: { email } });
+
+    if (existingUser) {
+      return existingUser;
+    }
+
+    const user = this.usersRepository.create({
+      email,
+      password: Math.random().toString(36).slice(-12),
+      firstName,
+      lastName,
+      isEmailVerified: true,
+    });
+
+    return this.usersRepository.save(user);
   }
 }

@@ -148,4 +148,46 @@ export class AuthService {
       message: 'Password reset successfully. You can now login with your new password.',
     };
   }
+
+  // OAuth login helper
+  async validateOAuthLogin(provider: string, accessToken: string, profile: any) {
+    // profile may differ depending on provider; try to extract email and name
+    const email = profile.email || (profile.emails && profile.emails[0] && profile.emails[0].value);
+    const firstName = profile.given_name || profile.firstName || profile.name?.givenName || profile.displayName?.split(' ')[0];
+    const lastName = profile.family_name || profile.lastName || profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ');
+
+    if (!email) {
+      throw new UnauthorizedException('No email returned from OAuth provider');
+    }
+
+    // Only allow logging in with OAuth for existing users who have enabled Youthacks OAuth
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('No account exists for this OAuth user');
+    }
+
+    if (!user.youthacksEnabled) {
+      throw new UnauthorizedException('Youthacks OAuth is not enabled for this account');
+    }
+
+    // If a provider id was stored, attempt to validate it matches
+    const providerId = profile.sub || profile.id;
+    if (user.youthacksId && providerId && user.youthacksId !== providerId) {
+      throw new UnauthorizedException('OAuth provider id does not match account configuration');
+    }
+
+    const payload = { email: user.email, sub: user.id };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isEmailVerified: user.isEmailVerified,
+      },
+    };
+  }
 }

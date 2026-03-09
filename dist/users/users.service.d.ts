@@ -20,10 +20,12 @@ export declare class UsersService {
     verifyEmailChange(userId: string, token: string): Promise<User>;
     requestPasswordChange(userId: string, currentPassword: string, token: string): Promise<User>;
     verifyPasswordChange(userId: string, token: string, newPassword: string): Promise<User>;
+    setYouthacksSettings(userId: string, enabled: boolean, youthacksId?: string): Promise<User>;
     changeEmail(userId: string, changeEmailDto: ChangeEmailDto): Promise<{
         message: string;
     }>;
     changePassword(userId: string, changePasswordDto: RequestPasswordChangeDto): Promise<{
         message: string;
     }>;
+    createOAuthUser(email: string, firstName?: string, lastName?: string): Promise<User>;
 }

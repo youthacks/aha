@@ -11,7 +11,11 @@ async function bootstrap() {
         forbidNonWhitelisted: true,
         transform: true,
     }));
-    app.enableCors();
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    app.enableCors({
+        origin: frontendUrl,
+        credentials: true,
+    });
     try {
         const eventsService = app.get(events_service_1.EventsService);
         const updatedCount = await eventsService.backfillJoinCodes();

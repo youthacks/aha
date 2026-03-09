@@ -20,6 +20,7 @@ const admin_key_guard_1 = require("../auth/guards/admin-key.guard");
 const email_service_1 = require("../email/email.service");
 const change_email_dto_1 = require("./dto/change-email.dto");
 const change_password_dto_1 = require("./dto/change-password.dto");
+const update_oauth_dto_1 = require("./dto/update-oauth.dto");
 let UsersController = class UsersController {
     constructor(usersService, emailService) {
         this.usersService = usersService;
@@ -96,6 +97,21 @@ let UsersController = class UsersController {
             message: 'Password changed successfully',
         };
     }
+    async getSettings(req) {
+        const user = await this.usersService.findById(req.user.userId);
+        return {
+            youthacksEnabled: user.youthacksEnabled || false,
+            youthacksId: user.youthacksId || null,
+        };
+    }
+    async updateYouthacksSettings(req, dto) {
+        const user = await this.usersService.setYouthacksSettings(req.user.userId, dto.enabled, dto.youthacksId);
+        return {
+            message: 'Youthacks OAuth settings updated',
+            youthacksEnabled: user.youthacksEnabled,
+            youthacksId: user.youthacksId,
+        };
+    }
 };
 exports.UsersController = UsersController;
 __decorate([
@@ -156,6 +172,23 @@ __decorate([
     __metadata("design:paramtypes", [Object, change_password_dto_1.ChangePasswordDto]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "verifyPasswordChange", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('settings'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "getSettings", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('settings/youthacks'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, update_oauth_dto_1.UpdateOAuthDto]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "updateYouthacksSettings", null);
 exports.UsersController = UsersController = __decorate([
     (0, common_1.Controller)('users'),
     __metadata("design:paramtypes", [users_service_1.UsersService,

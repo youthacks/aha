@@ -2,6 +2,7 @@ import { UsersService } from './users.service';
 import { EmailService } from '../email/email.service';
 import { ChangeEmailDto, VerifyEmailChangeDto } from './dto/change-email.dto';
 import { RequestPasswordChangeDto, ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateOAuthDto } from './dto/update-oauth.dto';
 export declare class UsersController {
     private usersService;
     private emailService;
@@ -55,5 +56,14 @@ export declare class UsersController {
     }>;
     verifyPasswordChange(req: any, changeDto: ChangePasswordDto): Promise<{
         message: string;
+    }>;
+    getSettings(req: any): Promise<{
+        youthacksEnabled: boolean;
+        youthacksId: string;
+    }>;
+    updateYouthacksSettings(req: any, dto: UpdateOAuthDto): Promise<{
+        message: string;
+        youthacksEnabled: boolean;
+        youthacksId: string;
     }>;
 }

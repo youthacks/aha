@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { LoginDto } from './dto/login.dto';
@@ -6,6 +7,7 @@ import { ForgotPasswordDto, ResetPasswordDto } from './dto/reset-password.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
+    private buildYouthacksAuthorizationUrl;
     register(createUserDto: CreateUserDto): Promise<{
         message: string;
         user: {
@@ -47,4 +49,7 @@ export declare class AuthController {
         message: string;
     }>;
     getProfile(req: any): any;
+    redirectToYouthacks(res: Response): void;
+    getYouthacksAuthorizationUrl(res: Response): Response<any, Record<string, any>>;
+    YouthacksCallback(req: any, code: string, state: string, res: Response): Promise<void | Response<any, Record<string, any>>>;
 }

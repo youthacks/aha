@@ -13,6 +13,7 @@ import ResetPassword from './pages/ResetPassword';
 import Settings from './pages/Settings';
 import VerifyEmailChange from './pages/VerifyEmailChange';
 import ConfirmPasswordChange from './pages/ConfirmPasswordChange';
+import OAuthCallback from './pages/OAuthCallback';
 
 function AppRoutes() {
   const { loading } = useAuth();
@@ -27,6 +28,7 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify-email" element={<VerifyEmail />} />

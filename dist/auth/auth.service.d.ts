@@ -50,4 +50,14 @@ export declare class AuthService {
     resetPassword(email: string, token: string, newPassword: string): Promise<{
         message: string;
     }>;
+    validateOAuthLogin(provider: string, accessToken: string, profile: any): Promise<{
+        access_token: string;
+        user: {
+            id: string;
+            email: string;
+            firstName: string;
+            lastName: string;
+            isEmailVerified: boolean;
+        };
+    }>;
 }

@@ -9,6 +9,11 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('email');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [oauthRedirectLoading, setOauthRedirectLoading] = useState(false);
+
+  // OAuth settings
+  const [youthacksEnabled, setYouthacksEnabled] = useState(false);
+  const [loadingOAuth, setLoadingOAuth] = useState(false);
 
   // Email change states
   const [newEmail, setNewEmail] = useState('');
@@ -52,6 +57,55 @@ const Settings: React.FC = () => {
     }
   };
 
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const resp = await api.get('/users/settings');
+        setYouthacksEnabled(resp.data.youthacksEnabled || false);
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
+  const handleUpdateOAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingOAuth(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const resp = await api.post('/users/settings/youthacks', { enabled: youthacksEnabled });
+      setSuccess(resp.data.message);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to update OAuth settings');
+    } finally {
+      setLoadingOAuth(false);
+    }
+  };
+
+  const handleYouthacksLogin = async () => {
+    setError('');
+    setSuccess('');
+    setOauthRedirectLoading(true);
+
+    try {
+      const response = await api.get('/auth/youthacks-url', { withCredentials: true });
+      const redirectUrl = response.data?.redirectUrl;
+
+      if (!redirectUrl) {
+        throw new Error('Missing OAuth redirect URL');
+      }
+
+      window.location.assign(redirectUrl);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to start Youthacks login');
+      setOauthRedirectLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-card">
@@ -80,6 +134,12 @@ const Settings: React.FC = () => {
             onClick={() => setActiveTab('password')}
           >
             🔒 Password
+          </button>
+          <button
+            className={activeTab === 'oauth' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('oauth')}
+          >
+            🔑 OAuth
           </button>
         </div>
 
@@ -165,6 +225,41 @@ const Settings: React.FC = () => {
                 >
                   {passwordChanging ? 'Sending...' : 'Send Confirmation Email'}
                 </button>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'oauth' && (
+            <div>
+              <h3 style={{ marginBottom: '10px' }}>Youthacks OAuth</h3>
+              <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>
+                Enable logging in with a Youthacks account. You can enable this option here. To use OAuth to login, use the "Login with Youthacks" button on the login page.
+              </p>
+
+              <form onSubmit={handleUpdateOAuth}>
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={youthacksEnabled}
+                      onChange={(e) => setYouthacksEnabled(e.target.checked)}
+                    /> Enable Youthacks login for this account
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <button type="submit" className="btn-primary" disabled={loadingOAuth}>
+                    {loadingOAuth ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={handleYouthacksLogin}
+                    disabled={oauthRedirectLoading}
+                  >
+                    {oauthRedirectLoading ? 'Redirecting...' : 'Login with Youthacks'}
+                  </button>
+                </div>
               </form>
             </div>
           )}
