@@ -27,8 +27,8 @@ let YouthacksStrategy = class YouthacksStrategy extends (0, passport_1.PassportS
             clientID: configService.get('YOUTHACKS_CLIENT_ID'),
             clientSecret: configService.get('YOUTHACKS_CLIENT_SECRET'),
             callbackURL: configService.get('YOUTHACKS_CALLBACK_URL') ||
-                `${(configService.get('APP_URL') || 'http://localhost:3000').replace(/\/$/, '')}/auth/youthacks/callback`,
-            scope: ['profile', 'email'],
+                `${(configService.get('BACKEND_URL') || configService.get('API_URL') || configService.get('APP_URL') || 'http://localhost:3000').replace(/\/$/, '')}/auth/youthacks/callback`,
+            scope: ['openid', 'profile', 'email'],
         });
         this.configService = configService;
         this.authService = authService;

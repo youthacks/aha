@@ -67,7 +67,7 @@ export class UsersController {
   @Post('request-email-change')
   async requestEmailChange(@Request() req, @Body() changeEmailDto: ChangeEmailDto) {
     const token = this.emailService.generateVerificationToken();
-    const user = await this.usersService.requestEmailChange(req.user.userId, changeEmailDto.newEmail, token);
+    const user = await this.usersService.requestEmailChange(req.user.id, changeEmailDto.newEmail, token);
 
     await this.emailService.sendEmailChangeVerification(
       changeEmailDto.newEmail,
@@ -83,7 +83,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Post('verify-email-change')
   async verifyEmailChange(@Request() req, @Body() verifyDto: VerifyEmailChangeDto) {
-    const user = await this.usersService.verifyEmailChange(req.user.userId, verifyDto.token);
+    const user = await this.usersService.verifyEmailChange(req.user.id, verifyDto.token);
 
     return {
       message: 'Email address changed successfully',
@@ -101,7 +101,7 @@ export class UsersController {
   async requestPasswordChange(@Request() req, @Body() requestDto: RequestPasswordChangeDto) {
     const token = this.emailService.generateVerificationToken();
     const user = await this.usersService.requestPasswordChange(
-      req.user.userId,
+      req.user.id,
       requestDto.currentPassword,
       token,
     );
@@ -121,7 +121,7 @@ export class UsersController {
   @Post('verify-password-change')
   async verifyPasswordChange(@Request() req, @Body() changeDto: ChangePasswordDto) {
     await this.usersService.verifyPasswordChange(
-      req.user.userId,
+      req.user.id,
       changeDto.token,
       changeDto.newPassword,
     );
@@ -134,7 +134,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get('settings')
   async getSettings(@Request() req) {
-    const user = await this.usersService.findById(req.user.userId);
+    const user = await this.usersService.findById(req.user.id);
 
     return {
       youthacksEnabled: user.youthacksEnabled || false,
@@ -146,7 +146,7 @@ export class UsersController {
   @Post('settings/youthacks')
   async updateYouthacksSettings(@Request() req, @Body() dto: UpdateOAuthDto) {
     const user = await this.usersService.setYouthacksSettings(
-      req.user.userId,
+      req.user.id,
       dto.enabled,
       dto.youthacksId,
     );

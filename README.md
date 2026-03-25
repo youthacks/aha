@@ -49,7 +49,31 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 SMTP_FROM=AHA <your-email@gmail.com>
 APP_URL=http://localhost:3001
+
+# Optional explicit backend URL used for OAuth callback construction
+BACKEND_URL=http://localhost:3000
+
+# Youthacks OAuth/OIDC (confidential client)
+YOUTHACKS_BASE_URL=https://auth.youthacks.org
+YOUTHACKS_CLIENT_ID=your-client-id
+YOUTHACKS_CLIENT_SECRET=your-client-secret
+# Recommended to set explicitly in production
+YOUTHACKS_CALLBACK_URL=http://localhost:3001/auth/youthacks/callback
+# Optional dedicated callback for account linking from Settings
+YOUTHACKS_LINK_CALLBACK_URL=http://localhost:3001/auth/youthacks/integration/callback
+# Optional manual overrides; if omitted, discovery/fallback is used
+# YOUTHACKS_AUTH_URL=https://auth.youthacks.org/oauth/authorize
+# YOUTHACKS_TOKEN_URL=https://auth.youthacks.org/oauth/token
+# YOUTHACKS_USERINFO_URL=https://auth.youthacks.org/oauth/userinfo
+
+# Frontend URL used for redirect after successful OAuth callback
+FRONTEND_URL=http://localhost:3001
 ```
+
+OAuth callback port notes:
+- Default flow uses frontend callback routes on port 3001: `/auth/youthacks/callback` and `/auth/youthacks/integration/callback`.
+- Backend still performs token exchange through `/auth/youthacks/exchange`.
+- If you prefer backend callback endpoints, set `YOUTHACKS_CALLBACK_URL` and `YOUTHACKS_LINK_CALLBACK_URL` to port 3000 endpoints instead.
 
 ### 3. Create database:
 ```sql
@@ -78,6 +102,10 @@ node wipe-db.js
 ### Authentication
 - `POST /auth/register` - Register new user
 - `POST /auth/login` - Login user
+- `GET /auth/youthacks-url` - Get Youthacks OAuth login redirect URL
+- `GET /auth/youthacks-link-url` - Get Youthacks OAuth link redirect URL (protected)
+- `GET /auth/youthacks/callback` - OAuth/OIDC callback handler
+- `GET /auth/youthacks/integration/callback` - OAuth/OIDC callback handler for account linking flow
 - `GET /auth/verify-email` - Verify email
 - `POST /auth/resend-verification` - Resend verification email
 - `POST /auth/forgot-password` - Request password reset

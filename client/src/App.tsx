@@ -28,6 +28,8 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/auth/youthacks/callback" element={<OAuthCallback />} />
+      <Route path="/auth/youthacks/integration/callback" element={<OAuthCallback />} />
       <Route path="/oauth/callback" element={<OAuthCallback />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

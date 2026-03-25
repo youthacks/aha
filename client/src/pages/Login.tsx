@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -11,6 +11,11 @@ const Login: React.FC = () => {
   const [oauthLoading, setOauthLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const params = new URLSearchParams(location.search);
+  const oauthFailed = params.get('oauth') === 'failed';
+  const oauthReason = params.get('reason');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +37,7 @@ const Login: React.FC = () => {
     setOauthLoading(true);
 
     try {
+      sessionStorage.setItem('oauth_intent', 'login');
       const response = await api.get('/auth/youthacks-url', { withCredentials: true });
       const redirectUrl = response.data?.redirectUrl;
 
@@ -54,7 +60,11 @@ const Login: React.FC = () => {
           <p>Login to your account</p>
         </div>
 
-        {error && <div className="alert alert-error">{error}</div>}
+        {(error || oauthFailed) && (
+          <div className="alert alert-error">
+            {error || oauthReason || 'Youthacks login failed. Please try again.'}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">

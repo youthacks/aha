@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
@@ -149,6 +149,14 @@ export class AuthService {
     };
   }
 
+  async linkYouthacksAccount(userId: string, providerId: string) {
+    await this.usersService.setYouthacksSettings(userId, true, providerId);
+
+    return {
+      message: 'Youthacks account linked successfully',
+    };
+  }
+
   // OAuth login helper
   async validateOAuthLogin(provider: string, accessToken: string, profile: any) {
     // profile may differ depending on provider; try to extract email and name
@@ -168,13 +176,20 @@ export class AuthService {
     }
 
     if (!user.youthacksEnabled) {
-      throw new UnauthorizedException('Youthacks OAuth is not enabled for this account');
+      throw new ForbiddenException('Youthacks OAuth is not enabled for this account. Enable it in Settings first.');
     }
 
-    // If a provider id was stored, attempt to validate it matches
     const providerId = profile.sub || profile.id;
-    if (user.youthacksId && providerId && user.youthacksId !== providerId) {
-      throw new UnauthorizedException('OAuth provider id does not match account configuration');
+    if (!providerId) {
+      throw new UnauthorizedException('OAuth profile did not include a subject identifier');
+    }
+
+    if (!user.youthacksId) {
+      throw new ForbiddenException('Youthacks account is not linked. Connect your account in Settings first.');
+    }
+
+    if (user.youthacksId !== providerId) {
+      throw new ForbiddenException('Connected Youthacks account does not match this login. Reconnect the correct account in Settings.');
     }
 
     const payload = { email: user.email, sub: user.id };

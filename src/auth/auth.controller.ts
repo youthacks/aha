@@ -1,4 +1,19 @@
-import { Controller, Post, Body, UseGuards, Request, Get, Query, Res, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Get,
+  Query,
+  Res,
+  Req,
+  BadRequestException,
+  ForbiddenException,
+  UnauthorizedException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import axios from 'axios';
 import { AuthService } from './auth.service';
@@ -11,21 +26,12 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private jwtService: JwtService,
+  ) {}
 
-  private buildYouthacksAuthorizationUrl(res: Response): string {
-    const base = process.env.YOUTHACKS_BASE_URL || 'https://auth.youthacks.org';
-    const authUrl = process.env.YOUTHACKS_AUTH_URL || `${base.replace(/\/$/, '')}/oauth/authorize`;
-    const clientId = process.env.YOUTHACKS_CLIENT_ID;
-    const callback =
-      process.env.YOUTHACKS_CALLBACK_URL ||
-      `${(process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '')}/auth/youthacks/callback`;
-    const scope = encodeURIComponent('profile email');
-
-    // Generate CSRF state and set as HttpOnly cookie for callback validation.
-    const crypto = require('crypto');
-    const state = crypto.randomBytes(16).toString('hex');
-
+  private getOAuthCookieOptions(): any {
     const cookieOptions: any = {
       httpOnly: true,
       maxAge: 5 * 60 * 1000,
@@ -34,12 +40,127 @@ export class AuthController {
     if (process.env.NODE_ENV === 'production') {
       cookieOptions.secure = true;
     }
+    return cookieOptions;
+  }
+
+  private resolveAuthenticatedUserId(req: any): string | null {
+    const authHeader = req?.headers?.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.slice('Bearer '.length).trim();
+    if (!token) {
+      return null;
+    }
+
+    try {
+      const payload: any = this.jwtService.verify(token);
+      return payload?.sub || null;
+    } catch {
+      return null;
+    }
+  }
+
+  private parseCookie(cookieStr: string | undefined, name: string): string | null {
+    if (!cookieStr) return null;
+    const parts = cookieStr.split(';').map((c: string) => c.trim());
+    const found = parts.find((p: string) => p.startsWith(name + '='));
+    if (!found) return null;
+    return decodeURIComponent(found.split('=').slice(1).join('='));
+  }
+
+  private base64UrlEncode(input: Buffer): string {
+    return input
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/g, '');
+  }
+
+  private buildPkcePair(): { verifier: string; challenge: string } {
+    const crypto = require('crypto');
+    const verifier = this.base64UrlEncode(crypto.randomBytes(64));
+    const challenge = this.base64UrlEncode(crypto.createHash('sha256').update(verifier).digest());
+    return { verifier, challenge };
+  }
+
+  private getBackendBaseUrl(): string {
+    return (
+      process.env.BACKEND_URL ||
+      process.env.API_URL ||
+      process.env.APP_URL ||
+      'http://localhost:3000'
+    ).replace(/\/$/, '');
+  }
+
+  private getFrontendBaseUrl(): string {
+    return (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000').replace(/\/$/, '');
+  }
+
+  private getYouthacksCallbackUrl(mode: 'login' | 'link'): string {
+    if (mode === 'link') {
+      return (
+        process.env.YOUTHACKS_LINK_CALLBACK_URL ||
+        `https://localhost:3001/auth/youthacks/integration/callback`
+      );
+    }
+
+    return process.env.YOUTHACKS_CALLBACK_URL || `${this.getFrontendBaseUrl()}/auth/youthacks/callback`;
+  }
+
+  private async resolveOidcConfig() {
+    const base = (process.env.YOUTHACKS_BASE_URL || 'https://auth.youthacks.org').replace(/\/$/, '');
+    const configuredAuthUrl = process.env.YOUTHACKS_AUTH_URL;
+    const configuredTokenUrl = process.env.YOUTHACKS_TOKEN_URL;
+    const configuredUserInfoUrl = process.env.YOUTHACKS_USERINFO_URL;
+
+    if (configuredAuthUrl && configuredTokenUrl && configuredUserInfoUrl) {
+      return {
+        authorizationEndpoint: configuredAuthUrl,
+        tokenEndpoint: configuredTokenUrl,
+        userinfoEndpoint: configuredUserInfoUrl,
+      };
+    }
+
+    try {
+      const discoveryUrl = `${base}/.well-known/openid-configuration`;
+      const discovery = await axios.get(discoveryUrl, { timeout: 5000 });
+      return {
+        authorizationEndpoint: configuredAuthUrl || discovery.data.authorization_endpoint || `${base}/oauth/authorize`,
+        tokenEndpoint: configuredTokenUrl || discovery.data.token_endpoint || `${base}/oauth/token`,
+        userinfoEndpoint: configuredUserInfoUrl || discovery.data.userinfo_endpoint || `${base}/oauth/userinfo`,
+      };
+    } catch {
+      return {
+        authorizationEndpoint: configuredAuthUrl || `${base}/oauth/authorize`,
+        tokenEndpoint: configuredTokenUrl || `${base}/oauth/token`,
+        userinfoEndpoint: configuredUserInfoUrl || `${base}/oauth/userinfo`,
+      };
+    }
+  }
+
+  private async buildYouthacksAuthorizationUrl(res: Response, mode: 'login' | 'link'): Promise<string> {
+    const oidc = await this.resolveOidcConfig();
+    const authUrl = oidc.authorizationEndpoint;
+    const clientId = process.env.YOUTHACKS_CLIENT_ID;
+    const callback = this.getYouthacksCallbackUrl(mode);
+    const scope = encodeURIComponent('openid profile email');
+
+    // Generate CSRF state and set as HttpOnly cookie for callback validation.
+    const crypto = require('crypto');
+    const state = crypto.randomBytes(16).toString('hex');
+    const pkce = this.buildPkcePair();
+
+    const cookieOptions = this.getOAuthCookieOptions();
 
     res.cookie('oauth_state', state, cookieOptions);
+    res.cookie('oauth_mode', mode, cookieOptions);
+    res.cookie('oauth_pkce_verifier', pkce.verifier, cookieOptions);
 
     return `${authUrl}?response_type=code&client_id=${encodeURIComponent(
       clientId,
-    )}&redirect_uri=${encodeURIComponent(callback)}&scope=${scope}&state=${encodeURIComponent(state)}`;
+    )}&redirect_uri=${encodeURIComponent(callback)}&scope=${scope}&state=${encodeURIComponent(state)}&code_challenge=${encodeURIComponent(pkce.challenge)}&code_challenge_method=S256`;
   }
 
   @Post('register')
@@ -79,55 +200,103 @@ export class AuthController {
   }
 
   @Get('youthacks')
-  redirectToYouthacks(@Res() res: Response) {
-    return res.redirect(this.buildYouthacksAuthorizationUrl(res));
+  async redirectToYouthacks(@Req() req, @Res() res: Response) {
+    const loggedInUserId = this.resolveAuthenticatedUserId(req);
+    if (loggedInUserId) {
+      res.cookie('oauth_link_user_id', loggedInUserId, this.getOAuthCookieOptions());
+      return res.redirect(await this.buildYouthacksAuthorizationUrl(res, 'link'));
+    }
+
+    return res.redirect(await this.buildYouthacksAuthorizationUrl(res, 'login'));
   }
 
   @Get('youthacks-url')
-  getYouthacksAuthorizationUrl(@Res() res: Response) {
-    return res.json({ redirectUrl: this.buildYouthacksAuthorizationUrl(res) });
-  }
-
-  @Get('youthacks/callback')
-  async YouthacksCallback(@Req() req, @Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
-    const base = process.env.YOUTHACKS_BASE_URL || 'https://auth.youthacks.org';
-    const tokenUrl = process.env.YOUTHACKS_TOKEN_URL || `${base.replace(/\/$/, '')}/oauth/token`;
-    const clientId = process.env.YOUTHACKS_CLIENT_ID;
-    const clientSecret = process.env.YOUTHACKS_CLIENT_SECRET;
-    const callback = process.env.YOUTHACKS_CALLBACK_URL || `${(process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '')}/auth/youthacks/callback`;
-    const userinfoUrl = process.env.YOUTHACKS_USERINFO_URL || `${base.replace(/\/$/, '')}/oauth/userinfo`;
-
-    // Validate state against cookie
-    const cookieHeader = req.headers && req.headers.cookie;
-    const parseCookie = (cookieStr: string | undefined, name: string) => {
-      if (!cookieStr) return null;
-      const parts = cookieStr.split(';').map((c: string) => c.trim());
-      const found = parts.find((p: string) => p.startsWith(name + '='));
-      if (!found) return null;
-      return decodeURIComponent(found.split('=').slice(1).join('='));
-    };
-    const cookieState = parseCookie(cookieHeader, 'oauth_state');
-    if (!state || !cookieState || state !== cookieState) {
-      return res.status(400).json({ message: 'Invalid or missing OAuth state' });
+  async getYouthacksAuthorizationUrl(@Req() req, @Res() res: Response) {
+    const loggedInUserId = this.resolveAuthenticatedUserId(req);
+    if (loggedInUserId) {
+      res.cookie('oauth_link_user_id', loggedInUserId, this.getOAuthCookieOptions());
+      return res.json({ redirectUrl: await this.buildYouthacksAuthorizationUrl(res, 'link') });
     }
 
-    // Clear the state cookie
+    return res.json({ redirectUrl: await this.buildYouthacksAuthorizationUrl(res, 'login') });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('youthacks-link-url')
+  async getYouthacksLinkAuthorizationUrl(@Request() req, @Res() res: Response) {
+    res.cookie('oauth_link_user_id', req.user.id, this.getOAuthCookieOptions());
+    return res.json({ redirectUrl: await this.buildYouthacksAuthorizationUrl(res, 'link') });
+  }
+
+  private async exchangeYouthacksAuthorizationCode(
+    req: any,
+    res: Response,
+    code: string,
+    state: string,
+    expectedMode?: 'login' | 'link',
+  ) {
+    const oidc = await this.resolveOidcConfig();
+    const tokenUrl = oidc.tokenEndpoint;
+    const clientId = process.env.YOUTHACKS_CLIENT_ID;
+    const clientSecret = process.env.YOUTHACKS_CLIENT_SECRET;
+    const userinfoUrl = oidc.userinfoEndpoint;
+
+    const cookieHeader = req.headers && req.headers.cookie;
+    const cookieState = this.parseCookie(cookieHeader, 'oauth_state');
+    const oauthMode = this.parseCookie(cookieHeader, 'oauth_mode') as 'login' | 'link' | null;
+    const linkUserId = this.parseCookie(cookieHeader, 'oauth_link_user_id');
+    const pkceVerifier = this.parseCookie(cookieHeader, 'oauth_pkce_verifier');
+    const activeMode = expectedMode || oauthMode || 'login';
+    const callback = this.getYouthacksCallbackUrl(activeMode);
+
+    if (!state || !cookieState || state !== cookieState) {
+      throw new BadRequestException('Invalid or missing OAuth state');
+    }
+
     res.clearCookie('oauth_state');
+    res.clearCookie('oauth_mode');
+    res.clearCookie('oauth_link_user_id');
+    res.clearCookie('oauth_pkce_verifier');
 
     try {
-      const tokenResp = await axios.post(
-        tokenUrl,
-        new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: callback,
-          client_id: clientId,
-          client_secret: clientSecret,
-        }).toString(),
-        {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        },
-      );
+      const grantBase = {
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: callback,
+        ...(pkceVerifier ? { code_verifier: pkceVerifier } : {}),
+      };
+
+      // Some providers require HTTP Basic client auth, while others accept body credentials.
+      let tokenResp;
+      try {
+        tokenResp = await axios.post(
+          tokenUrl,
+          new URLSearchParams(grantBase).toString(),
+          {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
+            },
+          },
+        );
+      } catch (basicErr: any) {
+        const basicStatus = basicErr?.response?.status;
+        if (basicStatus !== 401 && basicStatus !== 403) {
+          throw basicErr;
+        }
+
+        tokenResp = await axios.post(
+          tokenUrl,
+          new URLSearchParams({
+            ...grantBase,
+            client_id: clientId,
+            client_secret: clientSecret,
+          }).toString(),
+          {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          },
+        );
+      }
 
       const accessToken = tokenResp.data.access_token;
 
@@ -137,17 +306,131 @@ export class AuthController {
 
       const profile = userResp.data;
 
-      const loginResult = await this.authService.validateOAuthLogin('youthacks', accessToken, profile);
+      if (activeMode === 'link') {
+        if (!linkUserId) {
+          throw new UnauthorizedException('Missing account link context');
+        }
 
-      // Redirect back to frontend with token and user info in fragment so the client can store it.
-      const frontend = process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000';
-      const fragment = `#access_token=${encodeURIComponent(loginResult.access_token)}&user=${encodeURIComponent(
-        JSON.stringify(loginResult.user),
+        const providerId = profile.sub || profile.id;
+        if (!providerId) {
+          throw new BadRequestException('OAuth profile is missing provider subject');
+        }
+
+        await this.authService.linkYouthacksAccount(linkUserId, providerId);
+        return {
+          mode: 'link' as const,
+          message: 'Youthacks account linked successfully',
+        };
+      }
+
+      const loginResult = await this.authService.validateOAuthLogin('youthacks', accessToken, profile);
+      return {
+        mode: 'login' as const,
+        ...loginResult,
+      };
+    } catch (err: any) {
+      if (err?.getStatus && typeof err.getStatus === 'function') {
+        throw err;
+      }
+
+      const providerStatus = err?.response?.status;
+      const providerData = err?.response?.data;
+      const providerError = providerData?.error || providerData?.code;
+      const providerDesc = providerData?.error_description || providerData?.message || providerData?.detail;
+
+      if (providerStatus === 403) {
+        const baseHelp = activeMode === 'link'
+          ? 'Youthacks denied the account-link request. Please reconnect from Settings and try again.'
+          : 'Youthacks denied the login request. If this is your first OAuth login, connect your Youthacks account in Settings first.';
+
+        const redirectHelp = `Confirm this redirect URI is registered in your OAuth provider: ${callback}`;
+        const providerHelp = providerDesc ? ` Provider response: ${providerDesc}` : '';
+
+        throw new ForbiddenException(`${baseHelp} ${redirectHelp}.${providerHelp}`.trim());
+      }
+
+      if (providerStatus === 400 && providerError === 'invalid_grant') {
+        throw new BadRequestException(
+          'OAuth code is invalid or expired. Please retry login from the beginning and do not reuse old callback URLs.',
+        );
+      }
+
+      if (err?.response?.data?.error) {
+        const detail = providerDesc ? `${providerError}: ${providerDesc}` : providerError;
+        throw new InternalServerErrorException(`OAuth exchange failed: ${detail}`);
+      }
+      if (err?.response?.data?.error_description) {
+        throw new InternalServerErrorException(`OAuth exchange failed: ${err.response.data.error_description}`);
+      }
+      if (err?.message) {
+        throw new InternalServerErrorException(`OAuth exchange failed: ${err.message}`);
+      }
+      throw new InternalServerErrorException('OAuth exchange failed');
+    }
+  }
+
+  @Get('youthacks/exchange')
+  async exchangeYouthacksCode(@Req() req, @Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+    const cookieMode = (this.parseCookie(req?.headers?.cookie, 'oauth_mode') as 'login' | 'link' | null) || 'login';
+
+    try {
+      const result = await this.exchangeYouthacksAuthorizationCode(req, res, code, state, cookieMode);
+      return res.json(result);
+    } catch (err: any) {
+      const status = err?.getStatus ? err.getStatus() : err?.status || 500;
+      const message = err?.response?.message || err?.message || 'OAuth exchange failed';
+      return res.status(status).json({
+        message,
+        statusCode: status,
+        oauthMode: cookieMode,
+      });
+    }
+  }
+
+  private buildOAuthErrorRedirect(mode: 'login' | 'link', status: number, message: string): string {
+    const frontend = this.getFrontendBaseUrl();
+    const target = mode === 'link' ? '/settings' : '/login';
+    const query = `oauth=failed&status=${encodeURIComponent(String(status))}&reason=${encodeURIComponent(message)}`;
+    return `${frontend}${target}?${query}`;
+  }
+
+  private async handleYouthacksCallback(
+    req: any,
+    code: string,
+    state: string,
+    res: Response,
+    mode: 'login' | 'link',
+  ) {
+    try {
+      const result = await this.exchangeYouthacksAuthorizationCode(req, res, code, state, mode);
+      if (result.mode === 'link') {
+        return res.redirect(`${this.getFrontendBaseUrl()}/settings?oauth=linked`);
+      }
+
+      const fragment = `#access_token=${encodeURIComponent(result.access_token)}&user=${encodeURIComponent(
+        JSON.stringify(result.user),
       )}`;
 
-      return res.redirect(`${frontend.replace(/\/$/, '')}/oauth/callback${fragment}`);
+      return res.redirect(`${this.getFrontendBaseUrl()}/oauth/callback${fragment}`);
     } catch (err: any) {
-      return res.status(500).json({ message: 'OAuth exchange failed', details: err.message });
+      const status = err?.getStatus ? err.getStatus() : err?.status || 500;
+      const message = err?.response?.message || err?.message || 'OAuth exchange failed';
+      return res.redirect(this.buildOAuthErrorRedirect(mode, status, message));
     }
+  }
+
+  @Get('youthacks/callback')
+  async YouthacksCallback(@Req() req, @Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+    return this.handleYouthacksCallback(req, code, state, res, 'login');
+  }
+
+  @Get('youthacks/integration/callback')
+  async youthacksIntegrationCallback(
+    @Req() req,
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Res() res: Response,
+  ) {
+    return this.handleYouthacksCallback(req, code, state, res, 'link');
   }
 }

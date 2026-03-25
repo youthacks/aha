@@ -65,14 +65,14 @@ let UsersController = class UsersController {
     }
     async requestEmailChange(req, changeEmailDto) {
         const token = this.emailService.generateVerificationToken();
-        const user = await this.usersService.requestEmailChange(req.user.userId, changeEmailDto.newEmail, token);
+        const user = await this.usersService.requestEmailChange(req.user.id, changeEmailDto.newEmail, token);
         await this.emailService.sendEmailChangeVerification(changeEmailDto.newEmail, token, user.firstName);
         return {
             message: 'Verification email sent to your new email address. Please check your inbox.',
         };
     }
     async verifyEmailChange(req, verifyDto) {
-        const user = await this.usersService.verifyEmailChange(req.user.userId, verifyDto.token);
+        const user = await this.usersService.verifyEmailChange(req.user.id, verifyDto.token);
         return {
             message: 'Email address changed successfully',
             user: {
@@ -85,27 +85,27 @@ let UsersController = class UsersController {
     }
     async requestPasswordChange(req, requestDto) {
         const token = this.emailService.generateVerificationToken();
-        const user = await this.usersService.requestPasswordChange(req.user.userId, requestDto.currentPassword, token);
+        const user = await this.usersService.requestPasswordChange(req.user.id, requestDto.currentPassword, token);
         await this.emailService.sendPasswordChangeConfirmation(user.email, token, user.firstName);
         return {
             message: 'Confirmation email sent. Please check your inbox to complete the password change.',
         };
     }
     async verifyPasswordChange(req, changeDto) {
-        await this.usersService.verifyPasswordChange(req.user.userId, changeDto.token, changeDto.newPassword);
+        await this.usersService.verifyPasswordChange(req.user.id, changeDto.token, changeDto.newPassword);
         return {
             message: 'Password changed successfully',
         };
     }
     async getSettings(req) {
-        const user = await this.usersService.findById(req.user.userId);
+        const user = await this.usersService.findById(req.user.id);
         return {
             youthacksEnabled: user.youthacksEnabled || false,
             youthacksId: user.youthacksId || null,
         };
     }
     async updateYouthacksSettings(req, dto) {
-        const user = await this.usersService.setYouthacksSettings(req.user.userId, dto.enabled, dto.youthacksId);
+        const user = await this.usersService.setYouthacksSettings(req.user.id, dto.enabled, dto.youthacksId);
         return {
             message: 'Youthacks OAuth settings updated',
             youthacksEnabled: user.youthacksEnabled,

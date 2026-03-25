@@ -50,15 +50,35 @@ const crypto = __importStar(require("crypto"));
 let EmailService = class EmailService {
     constructor(configService) {
         this.configService = configService;
+        if (this.isConsoleEmailMode()) {
+            this.transporter = nodemailer.createTransport({
+                jsonTransport: true,
+            });
+            return;
+        }
         this.transporter = nodemailer.createTransport({
             host: this.configService.get('SMTP_HOST'),
-            port: this.configService.get('SMTP_PORT'),
+            port: Number(this.configService.get('SMTP_PORT') || 587),
             secure: false,
             auth: {
                 user: this.configService.get('SMTP_USER'),
                 pass: this.configService.get('SMTP_PASS'),
             },
         });
+    }
+    isConsoleEmailMode() {
+        const nodeEnv = (this.configService.get('NODE_ENV') || 'development').toLowerCase();
+        return nodeEnv !== 'production';
+    }
+    logOutgoingEmail(to, subject, textBody) {
+        console.log('\n=================================');
+        console.log('DEV EMAIL OUTPUT');
+        console.log('=================================');
+        console.log(`To: ${to}`);
+        console.log(`Subject: ${subject}`);
+        console.log('---------------------------------');
+        console.log(textBody.trim());
+        console.log('=================================\n');
     }
     async sendVerificationEmail(email, token, firstName) {
         const appUrl = (this.configService.get('APP_URL') || 'https://aha.youthacks.org').replace(/\/$/, '');
@@ -114,14 +134,19 @@ If you didn't create an account, you can safely ignore this email.
 
 - AHA - Token System Team
     `;
+        const subject = 'Verify Your Email Address - AHA - Token System';
         try {
             await this.transporter.sendMail({
                 from: this.configService.get('SMTP_FROM'),
                 to: email,
-                subject: 'Verify Your Email Address - AHA - Token System',
+                subject,
                 text: textContent,
                 html: htmlContent,
             });
+            if (this.isConsoleEmailMode()) {
+                this.logOutgoingEmail(email, subject, textContent);
+                return;
+            }
             console.log(`✅ Verification email sent to: ${email}`);
         }
         catch (error) {
@@ -192,14 +217,19 @@ If you didn't request a password reset, please ignore this email.
 
 - AHA - Token System Team
     `;
+        const subject = 'Reset Your Password - AHA - Token System';
         try {
             await this.transporter.sendMail({
                 from: this.configService.get('SMTP_FROM'),
                 to: email,
-                subject: 'Reset Your Password - AHA - Token System',
+                subject,
                 text: textContent,
                 html: htmlContent,
             });
+            if (this.isConsoleEmailMode()) {
+                this.logOutgoingEmail(email, subject, textContent);
+                return;
+            }
             console.log(`✅ Password reset email sent to: ${email}`);
         }
         catch (error) {
@@ -273,14 +303,19 @@ If you didn't request this change, please ignore this email.
 
 - AHA - Token System Team
     `;
+        const subject = 'Verify Your New Email Address - AHA - Token System';
         try {
             await this.transporter.sendMail({
                 from: this.configService.get('SMTP_FROM'),
                 to: newEmail,
-                subject: 'Verify Your New Email Address - AHA - Token System',
+                subject,
                 text: textContent,
                 html: htmlContent,
             });
+            if (this.isConsoleEmailMode()) {
+                this.logOutgoingEmail(newEmail, subject, textContent);
+                return;
+            }
             console.log(`✅ Email change verification sent to: ${newEmail}`);
         }
         catch (error) {
@@ -351,14 +386,19 @@ If you didn't request this change, someone may have access to your account. Plea
 
 - AHA - Token System Team
     `;
+        const subject = 'Confirm Password Change - AHA - Token System';
         try {
             await this.transporter.sendMail({
                 from: this.configService.get('SMTP_FROM'),
                 to: email,
-                subject: 'Confirm Password Change - AHA - Token System',
+                subject,
                 text: textContent,
                 html: htmlContent,
             });
+            if (this.isConsoleEmailMode()) {
+                this.logOutgoingEmail(email, subject, textContent);
+                return;
+            }
             console.log(`✅ Password change confirmation sent to: ${email}`);
         }
         catch (error) {

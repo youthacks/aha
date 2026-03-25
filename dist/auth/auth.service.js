@@ -146,6 +146,12 @@ let AuthService = class AuthService {
             message: 'Password reset successfully. You can now login with your new password.',
         };
     }
+    async linkYouthacksAccount(userId, providerId) {
+        await this.usersService.setYouthacksSettings(userId, true, providerId);
+        return {
+            message: 'Youthacks account linked successfully',
+        };
+    }
     async validateOAuthLogin(provider, accessToken, profile) {
         const email = profile.email || (profile.emails && profile.emails[0] && profile.emails[0].value);
         const firstName = profile.given_name || profile.firstName || profile.name?.givenName || profile.displayName?.split(' ')[0];
@@ -158,11 +164,17 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('No account exists for this OAuth user');
         }
         if (!user.youthacksEnabled) {
-            throw new common_1.UnauthorizedException('Youthacks OAuth is not enabled for this account');
+            throw new common_1.ForbiddenException('Youthacks OAuth is not enabled for this account. Enable it in Settings first.');
         }
         const providerId = profile.sub || profile.id;
-        if (user.youthacksId && providerId && user.youthacksId !== providerId) {
-            throw new common_1.UnauthorizedException('OAuth provider id does not match account configuration');
+        if (!providerId) {
+            throw new common_1.UnauthorizedException('OAuth profile did not include a subject identifier');
+        }
+        if (!user.youthacksId) {
+            throw new common_1.ForbiddenException('Youthacks account is not linked. Connect your account in Settings first.');
+        }
+        if (user.youthacksId !== providerId) {
+            throw new common_1.ForbiddenException('Connected Youthacks account does not match this login. Reconnect the correct account in Settings.');
         }
         const payload = { email: user.email, sub: user.id };
         return {

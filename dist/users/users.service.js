@@ -224,7 +224,12 @@ let UsersService = class UsersService {
             throw new common_1.NotFoundException('User not found');
         }
         user.youthacksEnabled = enabled;
-        user.youthacksId = youthacksId ?? null;
+        if (!enabled) {
+            user.youthacksId = null;
+        }
+        else if (typeof youthacksId === 'string') {
+            user.youthacksId = youthacksId;
+        }
         return this.usersRepository.save(user);
     }
     async changeEmail(userId, changeEmailDto) {

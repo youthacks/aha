@@ -50,6 +50,9 @@ export declare class AuthService {
     resetPassword(email: string, token: string, newPassword: string): Promise<{
         message: string;
     }>;
+    linkYouthacksAccount(userId: string, providerId: string): Promise<{
+        message: string;
+    }>;
     validateOAuthLogin(provider: string, accessToken: string, profile: any): Promise<{
         access_token: string;
         user: {

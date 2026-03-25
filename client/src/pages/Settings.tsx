@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const Settings: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('email');
   const [error, setError] = useState('');
@@ -58,6 +59,32 @@ const Settings: React.FC = () => {
   };
 
   React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const oauthStatus = params.get('oauth');
+    if (oauthStatus === 'linked') {
+      setActiveTab('oauth');
+      setSuccess('Youthacks account connected successfully.');
+      navigate('/settings', { replace: true });
+      return;
+    }
+
+    if (oauthStatus === 'failed') {
+      const statusCode = params.get('status');
+      const reason = params.get('reason');
+
+      setActiveTab('oauth');
+
+      if (statusCode === '403') {
+        setError(reason || 'OAuth access denied. Your Youthacks account is not connected yet. Connect it from this page first.');
+      } else {
+        setError(reason || 'Failed to connect Youthacks account. Please try again.');
+      }
+
+      navigate('/settings', { replace: true });
+    }
+  }, [location.search, navigate]);
+
+  React.useEffect(() => {
     const fetchSettings = async () => {
       try {
         const resp = await api.get('/users/settings');
@@ -92,7 +119,8 @@ const Settings: React.FC = () => {
     setOauthRedirectLoading(true);
 
     try {
-      const response = await api.get('/auth/youthacks-url', { withCredentials: true });
+      sessionStorage.setItem('oauth_intent', 'link');
+      const response = await api.get('/auth/youthacks-link-url', { withCredentials: true });
       const redirectUrl = response.data?.redirectUrl;
 
       if (!redirectUrl) {
@@ -233,7 +261,7 @@ const Settings: React.FC = () => {
             <div>
               <h3 style={{ marginBottom: '10px' }}>Youthacks OAuth</h3>
               <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>
-                Enable logging in with a Youthacks account. You can enable this option here. To use OAuth to login, use the "Login with Youthacks" button on the login page.
+                Connect your Youthacks account here. Once linked and enabled, you can sign in from the login page using "Login with Youthacks".
               </p>
 
               <form onSubmit={handleUpdateOAuth}>
@@ -257,7 +285,7 @@ const Settings: React.FC = () => {
                     onClick={handleYouthacksLogin}
                     disabled={oauthRedirectLoading}
                   >
-                    {oauthRedirectLoading ? 'Redirecting...' : 'Login with Youthacks'}
+                    {oauthRedirectLoading ? 'Redirecting...' : 'Connect Youthacks Account'}
                   </button>
                 </div>
               </form>

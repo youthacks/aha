@@ -239,7 +239,11 @@ export class UsersService {
     }
 
     user.youthacksEnabled = enabled;
-    user.youthacksId = youthacksId ?? null;
+    if (!enabled) {
+      user.youthacksId = null;
+    } else if (typeof youthacksId === 'string') {
+      user.youthacksId = youthacksId;
+    }
 
     return this.usersRepository.save(user);
   }

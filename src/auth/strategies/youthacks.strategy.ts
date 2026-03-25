@@ -19,8 +19,8 @@ export class YouthacksStrategy extends PassportStrategy(Strategy, 'youthacks') {
       clientSecret: configService.get<string>('YOUTHACKS_CLIENT_SECRET'),
       callbackURL:
         configService.get<string>('YOUTHACKS_CALLBACK_URL') ||
-        `${(configService.get<string>('APP_URL') || 'http://localhost:3000').replace(/\/$/, '')}/auth/youthacks/callback`,
-      scope: ['profile', 'email'],
+        `${(configService.get<string>('BACKEND_URL') || configService.get<string>('API_URL') || configService.get<string>('APP_URL') || 'http://localhost:3000').replace(/\/$/, '')}/auth/youthacks/callback`,
+      scope: ['openid', 'profile', 'email'],
     });
     // keep userinfo url available on the instance if needed elsewhere
     (this as any).userinfoURL = userinfoURL;

@@ -8,15 +8,39 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(private configService: ConfigService) {
+    if (this.isConsoleEmailMode()) {
+      // In development, avoid external SMTP and keep all email output in terminal.
+      this.transporter = nodemailer.createTransport({
+        jsonTransport: true,
+      });
+      return;
+    }
+
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('SMTP_HOST'),
-      port: this.configService.get<number>('SMTP_PORT'),
+      port: Number(this.configService.get<string>('SMTP_PORT') || 587),
       secure: false,
       auth: {
         user: this.configService.get<string>('SMTP_USER'),
         pass: this.configService.get<string>('SMTP_PASS'),
       },
     });
+  }
+
+  private isConsoleEmailMode(): boolean {
+    const nodeEnv = (this.configService.get<string>('NODE_ENV') || 'development').toLowerCase();
+    return nodeEnv !== 'production';
+  }
+
+  private logOutgoingEmail(to: string, subject: string, textBody: string): void {
+    console.log('\n=================================');
+    console.log('DEV EMAIL OUTPUT');
+    console.log('=================================');
+    console.log(`To: ${to}`);
+    console.log(`Subject: ${subject}`);
+    console.log('---------------------------------');
+    console.log(textBody.trim());
+    console.log('=================================\n');
   }
 
   async sendVerificationEmail(email: string, token: string, firstName?: string): Promise<void> {
@@ -76,14 +100,21 @@ If you didn't create an account, you can safely ignore this email.
 - AHA - Token System Team
     `;
 
+    const subject = 'Verify Your Email Address - AHA - Token System';
+
     try {
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
         to: email,
-        subject: 'Verify Your Email Address - AHA - Token System',
+        subject,
         text: textContent,
         html: htmlContent,
       });
+
+      if (this.isConsoleEmailMode()) {
+        this.logOutgoingEmail(email, subject, textContent);
+        return;
+      }
 
       console.log(`✅ Verification email sent to: ${email}`);
     } catch (error) {
@@ -158,14 +189,21 @@ If you didn't request a password reset, please ignore this email.
 - AHA - Token System Team
     `;
 
+    const subject = 'Reset Your Password - AHA - Token System';
+
     try {
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
         to: email,
-        subject: 'Reset Your Password - AHA - Token System',
+        subject,
         text: textContent,
         html: htmlContent,
       });
+
+      if (this.isConsoleEmailMode()) {
+        this.logOutgoingEmail(email, subject, textContent);
+        return;
+      }
 
       console.log(`✅ Password reset email sent to: ${email}`);
     } catch (error) {
@@ -244,14 +282,21 @@ If you didn't request this change, please ignore this email.
 - AHA - Token System Team
     `;
 
+    const subject = 'Verify Your New Email Address - AHA - Token System';
+
     try {
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
         to: newEmail,
-        subject: 'Verify Your New Email Address - AHA - Token System',
+        subject,
         text: textContent,
         html: htmlContent,
       });
+
+      if (this.isConsoleEmailMode()) {
+        this.logOutgoingEmail(newEmail, subject, textContent);
+        return;
+      }
 
       console.log(`✅ Email change verification sent to: ${newEmail}`);
     } catch (error) {
@@ -326,14 +371,21 @@ If you didn't request this change, someone may have access to your account. Plea
 - AHA - Token System Team
     `;
 
+    const subject = 'Confirm Password Change - AHA - Token System';
+
     try {
       await this.transporter.sendMail({
         from: this.configService.get<string>('SMTP_FROM'),
         to: email,
-        subject: 'Confirm Password Change - AHA - Token System',
+        subject,
         text: textContent,
         html: htmlContent,
       });
+
+      if (this.isConsoleEmailMode()) {
+        this.logOutgoingEmail(email, subject, textContent);
+        return;
+      }
 
       console.log(`✅ Password change confirmation sent to: ${email}`);
     } catch (error) {
