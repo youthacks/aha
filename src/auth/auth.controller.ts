@@ -98,11 +98,63 @@ export class AuthController {
     return (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000').replace(/\/$/, '');
   }
 
+  private isDevOAuthDebugMode(): boolean {
+    return (process.env.NODE_ENV || 'development').toLowerCase() !== 'production';
+  }
+
+  private maskValue(value?: string | null, visibleChars = 4): string {
+    if (!value) return 'missing';
+    if (value.length <= visibleChars * 2) return '*'.repeat(value.length);
+    return `${value.slice(0, visibleChars)}***${value.slice(-visibleChars)}`;
+  }
+
+  private logOAuthDebug(label: string, details: Record<string, any>) {
+    if (!this.isDevOAuthDebugMode()) return;
+    console.log(`\\n[OAuth Debug] ${label}`);
+    console.log(JSON.stringify(details, null, 2));
+  }
+
+  private quoteForSingleQuotedShell(value: string): string {
+    return value.replace(/'/g, `'"'"'`);
+  }
+
+  private buildTokenCurlCommand(
+    tokenUrl: string,
+    grantBase: { grant_type: string; code: string; redirect_uri: string; code_verifier?: string },
+    clientId: string,
+    clientSecret: string,
+    mode: 'basic' | 'body',
+  ): string {
+    const payload: Record<string, string> = {
+      grant_type: grantBase.grant_type,
+      code: grantBase.code,
+      redirect_uri: grantBase.redirect_uri,
+      ...(grantBase.code_verifier ? { code_verifier: grantBase.code_verifier } : {}),
+      ...(mode === 'body' ? { client_id: clientId, client_secret: clientSecret } : {}),
+    };
+
+    const payloadJson = this.quoteForSingleQuotedShell(JSON.stringify(payload));
+
+    const authPart = mode === 'basic'
+      ? `-u '${this.quoteForSingleQuotedShell(clientId)}:${this.quoteForSingleQuotedShell(clientSecret)}'`
+      : '';
+
+    return [
+      `curl -i -X POST '${this.quoteForSingleQuotedShell(tokenUrl)}'`,
+      `  -H 'Content-Type: application/json'`,
+      `  -H 'Accept: application/json'`,
+      authPart ? `  ${authPart}` : '',
+      `  --data '${payloadJson}'`,
+    ]
+      .filter(Boolean)
+      .join(' \\\n');
+  }
+
   private getYouthacksCallbackUrl(mode: 'login' | 'link'): string {
     if (mode === 'link') {
       return (
         process.env.YOUTHACKS_LINK_CALLBACK_URL ||
-        `https://localhost:3001/auth/youthacks/integration/callback`
+        `${this.getFrontendBaseUrl()}/auth/youthacks/integration/callback`
       );
     }
 
@@ -269,39 +321,96 @@ export class AuthController {
       // Some providers require HTTP Basic client auth, while others accept body credentials.
       let tokenResp;
       try {
+        this.logOAuthDebug('Token request (basic client auth)', {
+          mode: activeMode,
+          tokenUrl,
+          callback,
+          clientId: this.maskValue(clientId),
+          grantType: grantBase.grant_type,
+          hasCode: !!grantBase.code,
+          hasPkceVerifier: !!pkceVerifier,
+          curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'basic'),
+        });
+
         tokenResp = await axios.post(
           tokenUrl,
-          new URLSearchParams(grantBase).toString(),
+          grantBase,
           {
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
               Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
             },
           },
         );
+
+        this.logOAuthDebug('Token response (basic client auth)', {
+          status: tokenResp.status,
+          hasAccessToken: !!tokenResp?.data?.access_token,
+          responseKeys: Object.keys(tokenResp?.data || {}),
+          data: tokenResp?.data,
+        });
       } catch (basicErr: any) {
+        this.logOAuthDebug('Token response error (basic client auth)', {
+          status: basicErr?.response?.status,
+          data: basicErr?.response?.data,
+          message: basicErr?.message,
+        });
+
         const basicStatus = basicErr?.response?.status;
         if (basicStatus !== 401 && basicStatus !== 403) {
           throw basicErr;
         }
 
+        this.logOAuthDebug('Token request (body client auth fallback)', {
+          mode: activeMode,
+          tokenUrl,
+          callback,
+          clientId: this.maskValue(clientId),
+          clientSecret: this.maskValue(clientSecret),
+          grantType: grantBase.grant_type,
+          hasCode: !!grantBase.code,
+          hasPkceVerifier: !!pkceVerifier,
+          curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'body'),
+        });
+
         tokenResp = await axios.post(
           tokenUrl,
-          new URLSearchParams({
+          {
             ...grantBase,
             client_id: clientId,
             client_secret: clientSecret,
-          }).toString(),
+          },
           {
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
           },
         );
+
+        this.logOAuthDebug('Token response (body client auth fallback)', {
+          status: tokenResp.status,
+          hasAccessToken: !!tokenResp?.data?.access_token,
+          responseKeys: Object.keys(tokenResp?.data || {}),
+          data: tokenResp?.data,
+        });
       }
 
       const accessToken = tokenResp.data.access_token;
 
+      this.logOAuthDebug('Userinfo request', {
+        userinfoUrl,
+        accessToken: this.maskValue(accessToken),
+      });
+
       const userResp = await axios.get(userinfoUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      this.logOAuthDebug('Userinfo response', {
+        status: userResp.status,
+        data: userResp.data,
       });
 
       const profile = userResp.data;

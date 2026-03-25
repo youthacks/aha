@@ -16,6 +16,11 @@ export declare class AuthController {
     private buildPkcePair;
     private getBackendBaseUrl;
     private getFrontendBaseUrl;
+    private isDevOAuthDebugMode;
+    private maskValue;
+    private logOAuthDebug;
+    private quoteForSingleQuotedShell;
+    private buildTokenCurlCommand;
     private getYouthacksCallbackUrl;
     private resolveOidcConfig;
     private buildYouthacksAuthorizationUrl;
