@@ -96,26 +96,22 @@ let AuthController = class AuthController {
         return value.replace(/'/g, `'"'"'`);
     }
     buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, mode) {
-        const dataParts = [
-            `--data-urlencode 'grant_type=${this.quoteForSingleQuotedShell(grantBase.grant_type)}'`,
-            `--data-urlencode 'code=${this.quoteForSingleQuotedShell(grantBase.code)}'`,
-            `--data-urlencode 'redirect_uri=${this.quoteForSingleQuotedShell(grantBase.redirect_uri)}'`,
-            ...(mode === 'body'
-                ? [
-                    `--data-urlencode 'client_id=${this.quoteForSingleQuotedShell(clientId)}'`,
-                    `--data-urlencode 'client_secret=${this.quoteForSingleQuotedShell(clientSecret)}'`,
-                ]
-                : []),
-        ];
+        const payload = {
+            grant_type: grantBase.grant_type,
+            code: grantBase.code,
+            redirect_uri: grantBase.redirect_uri,
+            ...(mode === 'body' ? { client_id: clientId, client_secret: clientSecret } : {}),
+        };
+        const payloadJson = this.quoteForSingleQuotedShell(JSON.stringify(payload));
         const authPart = mode === 'basic'
             ? `-u '${this.quoteForSingleQuotedShell(clientId)}:${this.quoteForSingleQuotedShell(clientSecret)}'`
             : '';
         return [
             `curl -i -X POST '${this.quoteForSingleQuotedShell(tokenUrl)}'`,
-            `  -H 'Content-Type: application/x-www-form-urlencoded'`,
+            `  -H 'Content-Type: application/json'`,
             `  -H 'Accept: application/json'`,
             authPart ? `  ${authPart}` : '',
-            ...dataParts.map((part) => `  ${part}`),
+            `  --data '${payloadJson}'`,
         ]
             .filter(Boolean)
             .join(' \\\n');
@@ -245,9 +241,9 @@ let AuthController = class AuthController {
                     hasCode: !!grantBase.code,
                     curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'basic'),
                 });
-                tokenResp = await axios_1.default.post(tokenUrl, new URLSearchParams(grantBase).toString(), {
+                tokenResp = await axios_1.default.post(tokenUrl, grantBase, {
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                         Accept: 'application/json',
                         Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
                     },
@@ -279,13 +275,13 @@ let AuthController = class AuthController {
                     hasCode: !!grantBase.code,
                     curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'body'),
                 });
-                tokenResp = await axios_1.default.post(tokenUrl, new URLSearchParams({
+                tokenResp = await axios_1.default.post(tokenUrl, {
                     ...grantBase,
                     client_id: clientId,
                     client_secret: clientSecret,
-                }).toString(), {
+                }, {
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                         Accept: 'application/json',
                     },
                 });

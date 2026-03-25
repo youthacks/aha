@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
@@ -7,8 +7,14 @@ const OAuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { completeOAuthLogin } = useAuth();
+  const hasStartedRef = useRef(false);
 
   useEffect(() => {
+    if (hasStartedRef.current) {
+      return;
+    }
+    hasStartedRef.current = true;
+
     const getOAuthIntent = (): 'login' | 'link' => {
       const value = sessionStorage.getItem('oauth_intent');
       return value === 'link' ? 'link' : 'login';
