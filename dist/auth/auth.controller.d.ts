@@ -12,8 +12,6 @@ export declare class AuthController {
     private getOAuthCookieOptions;
     private resolveAuthenticatedUserId;
     private parseCookie;
-    private base64UrlEncode;
-    private buildPkcePair;
     private getBackendBaseUrl;
     private getFrontendBaseUrl;
     private isDevOAuthDebugMode;

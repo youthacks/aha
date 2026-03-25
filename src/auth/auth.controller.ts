@@ -70,21 +70,6 @@ export class AuthController {
     return decodeURIComponent(found.split('=').slice(1).join('='));
   }
 
-  private base64UrlEncode(input: Buffer): string {
-    return input
-      .toString('base64')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/=+$/g, '');
-  }
-
-  private buildPkcePair(): { verifier: string; challenge: string } {
-    const crypto = require('crypto');
-    const verifier = this.base64UrlEncode(crypto.randomBytes(64));
-    const challenge = this.base64UrlEncode(crypto.createHash('sha256').update(verifier).digest());
-    return { verifier, challenge };
-  }
-
   private getBackendBaseUrl(): string {
     return (
       process.env.BACKEND_URL ||
@@ -120,20 +105,22 @@ export class AuthController {
 
   private buildTokenCurlCommand(
     tokenUrl: string,
-    grantBase: { grant_type: string; code: string; redirect_uri: string; code_verifier?: string },
+    grantBase: { grant_type: string; code: string; redirect_uri: string },
     clientId: string,
     clientSecret: string,
     mode: 'basic' | 'body',
   ): string {
-    const payload: Record<string, string> = {
-      grant_type: grantBase.grant_type,
-      code: grantBase.code,
-      redirect_uri: grantBase.redirect_uri,
-      ...(grantBase.code_verifier ? { code_verifier: grantBase.code_verifier } : {}),
-      ...(mode === 'body' ? { client_id: clientId, client_secret: clientSecret } : {}),
-    };
-
-    const payloadJson = this.quoteForSingleQuotedShell(JSON.stringify(payload));
+    const dataParts = [
+      `--data-urlencode 'grant_type=${this.quoteForSingleQuotedShell(grantBase.grant_type)}'`,
+      `--data-urlencode 'code=${this.quoteForSingleQuotedShell(grantBase.code)}'`,
+      `--data-urlencode 'redirect_uri=${this.quoteForSingleQuotedShell(grantBase.redirect_uri)}'`,
+      ...(mode === 'body'
+        ? [
+            `--data-urlencode 'client_id=${this.quoteForSingleQuotedShell(clientId)}'`,
+            `--data-urlencode 'client_secret=${this.quoteForSingleQuotedShell(clientSecret)}'`,
+          ]
+        : []),
+    ];
 
     const authPart = mode === 'basic'
       ? `-u '${this.quoteForSingleQuotedShell(clientId)}:${this.quoteForSingleQuotedShell(clientSecret)}'`
@@ -141,10 +128,10 @@ export class AuthController {
 
     return [
       `curl -i -X POST '${this.quoteForSingleQuotedShell(tokenUrl)}'`,
-      `  -H 'Content-Type: application/json'`,
+      `  -H 'Content-Type: application/x-www-form-urlencoded'`,
       `  -H 'Accept: application/json'`,
       authPart ? `  ${authPart}` : '',
-      `  --data '${payloadJson}'`,
+      ...dataParts.map((part) => `  ${part}`),
     ]
       .filter(Boolean)
       .join(' \\\n');
@@ -202,17 +189,15 @@ export class AuthController {
     // Generate CSRF state and set as HttpOnly cookie for callback validation.
     const crypto = require('crypto');
     const state = crypto.randomBytes(16).toString('hex');
-    const pkce = this.buildPkcePair();
 
     const cookieOptions = this.getOAuthCookieOptions();
 
     res.cookie('oauth_state', state, cookieOptions);
     res.cookie('oauth_mode', mode, cookieOptions);
-    res.cookie('oauth_pkce_verifier', pkce.verifier, cookieOptions);
 
     return `${authUrl}?response_type=code&client_id=${encodeURIComponent(
       clientId,
-    )}&redirect_uri=${encodeURIComponent(callback)}&scope=${scope}&state=${encodeURIComponent(state)}&code_challenge=${encodeURIComponent(pkce.challenge)}&code_challenge_method=S256`;
+    )}&redirect_uri=${encodeURIComponent(callback)}&scope=${scope}&state=${encodeURIComponent(state)}`;
   }
 
   @Post('register')
@@ -297,7 +282,6 @@ export class AuthController {
     const cookieState = this.parseCookie(cookieHeader, 'oauth_state');
     const oauthMode = this.parseCookie(cookieHeader, 'oauth_mode') as 'login' | 'link' | null;
     const linkUserId = this.parseCookie(cookieHeader, 'oauth_link_user_id');
-    const pkceVerifier = this.parseCookie(cookieHeader, 'oauth_pkce_verifier');
     const activeMode = expectedMode || oauthMode || 'login';
     const callback = this.getYouthacksCallbackUrl(activeMode);
 
@@ -308,14 +292,12 @@ export class AuthController {
     res.clearCookie('oauth_state');
     res.clearCookie('oauth_mode');
     res.clearCookie('oauth_link_user_id');
-    res.clearCookie('oauth_pkce_verifier');
 
     try {
       const grantBase = {
         grant_type: 'authorization_code',
         code,
         redirect_uri: callback,
-        ...(pkceVerifier ? { code_verifier: pkceVerifier } : {}),
       };
 
       // Some providers require HTTP Basic client auth, while others accept body credentials.
@@ -328,16 +310,15 @@ export class AuthController {
           clientId: this.maskValue(clientId),
           grantType: grantBase.grant_type,
           hasCode: !!grantBase.code,
-          hasPkceVerifier: !!pkceVerifier,
           curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'basic'),
         });
 
         tokenResp = await axios.post(
           tokenUrl,
-          grantBase,
+          new URLSearchParams(grantBase).toString(),
           {
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
               Accept: 'application/json',
               Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
             },
@@ -370,20 +351,19 @@ export class AuthController {
           clientSecret: this.maskValue(clientSecret),
           grantType: grantBase.grant_type,
           hasCode: !!grantBase.code,
-          hasPkceVerifier: !!pkceVerifier,
           curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'body'),
         });
 
         tokenResp = await axios.post(
           tokenUrl,
-          {
+          new URLSearchParams({
             ...grantBase,
             client_id: clientId,
             client_secret: clientSecret,
-          },
+          }).toString(),
           {
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
               Accept: 'application/json',
             },
           },

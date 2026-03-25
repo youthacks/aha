@@ -67,19 +67,6 @@ let AuthController = class AuthController {
             return null;
         return decodeURIComponent(found.split('=').slice(1).join('='));
     }
-    base64UrlEncode(input) {
-        return input
-            .toString('base64')
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/g, '');
-    }
-    buildPkcePair() {
-        const crypto = require('crypto');
-        const verifier = this.base64UrlEncode(crypto.randomBytes(64));
-        const challenge = this.base64UrlEncode(crypto.createHash('sha256').update(verifier).digest());
-        return { verifier, challenge };
-    }
     getBackendBaseUrl() {
         return (process.env.BACKEND_URL ||
             process.env.API_URL ||
@@ -109,23 +96,26 @@ let AuthController = class AuthController {
         return value.replace(/'/g, `'"'"'`);
     }
     buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, mode) {
-        const payload = {
-            grant_type: grantBase.grant_type,
-            code: grantBase.code,
-            redirect_uri: grantBase.redirect_uri,
-            ...(grantBase.code_verifier ? { code_verifier: grantBase.code_verifier } : {}),
-            ...(mode === 'body' ? { client_id: clientId, client_secret: clientSecret } : {}),
-        };
-        const payloadJson = this.quoteForSingleQuotedShell(JSON.stringify(payload));
+        const dataParts = [
+            `--data-urlencode 'grant_type=${this.quoteForSingleQuotedShell(grantBase.grant_type)}'`,
+            `--data-urlencode 'code=${this.quoteForSingleQuotedShell(grantBase.code)}'`,
+            `--data-urlencode 'redirect_uri=${this.quoteForSingleQuotedShell(grantBase.redirect_uri)}'`,
+            ...(mode === 'body'
+                ? [
+                    `--data-urlencode 'client_id=${this.quoteForSingleQuotedShell(clientId)}'`,
+                    `--data-urlencode 'client_secret=${this.quoteForSingleQuotedShell(clientSecret)}'`,
+                ]
+                : []),
+        ];
         const authPart = mode === 'basic'
             ? `-u '${this.quoteForSingleQuotedShell(clientId)}:${this.quoteForSingleQuotedShell(clientSecret)}'`
             : '';
         return [
             `curl -i -X POST '${this.quoteForSingleQuotedShell(tokenUrl)}'`,
-            `  -H 'Content-Type: application/json'`,
+            `  -H 'Content-Type: application/x-www-form-urlencoded'`,
             `  -H 'Accept: application/json'`,
             authPart ? `  ${authPart}` : '',
-            `  --data '${payloadJson}'`,
+            ...dataParts.map((part) => `  ${part}`),
         ]
             .filter(Boolean)
             .join(' \\\n');
@@ -174,12 +164,10 @@ let AuthController = class AuthController {
         const scope = encodeURIComponent('openid profile email');
         const crypto = require('crypto');
         const state = crypto.randomBytes(16).toString('hex');
-        const pkce = this.buildPkcePair();
         const cookieOptions = this.getOAuthCookieOptions();
         res.cookie('oauth_state', state, cookieOptions);
         res.cookie('oauth_mode', mode, cookieOptions);
-        res.cookie('oauth_pkce_verifier', pkce.verifier, cookieOptions);
-        return `${authUrl}?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(callback)}&scope=${scope}&state=${encodeURIComponent(state)}&code_challenge=${encodeURIComponent(pkce.challenge)}&code_challenge_method=S256`;
+        return `${authUrl}?response_type=code&client_id=${encodeURIComponent(clientId)}&redirect_uri=${encodeURIComponent(callback)}&scope=${scope}&state=${encodeURIComponent(state)}`;
     }
     async register(createUserDto) {
         return this.authService.register(createUserDto);
@@ -232,7 +220,6 @@ let AuthController = class AuthController {
         const cookieState = this.parseCookie(cookieHeader, 'oauth_state');
         const oauthMode = this.parseCookie(cookieHeader, 'oauth_mode');
         const linkUserId = this.parseCookie(cookieHeader, 'oauth_link_user_id');
-        const pkceVerifier = this.parseCookie(cookieHeader, 'oauth_pkce_verifier');
         const activeMode = expectedMode || oauthMode || 'login';
         const callback = this.getYouthacksCallbackUrl(activeMode);
         if (!state || !cookieState || state !== cookieState) {
@@ -241,13 +228,11 @@ let AuthController = class AuthController {
         res.clearCookie('oauth_state');
         res.clearCookie('oauth_mode');
         res.clearCookie('oauth_link_user_id');
-        res.clearCookie('oauth_pkce_verifier');
         try {
             const grantBase = {
                 grant_type: 'authorization_code',
                 code,
                 redirect_uri: callback,
-                ...(pkceVerifier ? { code_verifier: pkceVerifier } : {}),
             };
             let tokenResp;
             try {
@@ -258,12 +243,11 @@ let AuthController = class AuthController {
                     clientId: this.maskValue(clientId),
                     grantType: grantBase.grant_type,
                     hasCode: !!grantBase.code,
-                    hasPkceVerifier: !!pkceVerifier,
                     curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'basic'),
                 });
-                tokenResp = await axios_1.default.post(tokenUrl, grantBase, {
+                tokenResp = await axios_1.default.post(tokenUrl, new URLSearchParams(grantBase).toString(), {
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                         Accept: 'application/json',
                         Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString('base64')}`,
                     },
@@ -293,16 +277,15 @@ let AuthController = class AuthController {
                     clientSecret: this.maskValue(clientSecret),
                     grantType: grantBase.grant_type,
                     hasCode: !!grantBase.code,
-                    hasPkceVerifier: !!pkceVerifier,
                     curl: this.buildTokenCurlCommand(tokenUrl, grantBase, clientId, clientSecret, 'body'),
                 });
-                tokenResp = await axios_1.default.post(tokenUrl, {
+                tokenResp = await axios_1.default.post(tokenUrl, new URLSearchParams({
                     ...grantBase,
                     client_id: clientId,
                     client_secret: clientSecret,
-                }, {
+                }).toString(), {
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/x-www-form-urlencoded',
                         Accept: 'application/json',
                     },
                 });
