@@ -100,7 +100,7 @@ let UsersController = class UsersController {
     async getSettings(req) {
         const user = await this.usersService.findById(req.user.id);
         return {
-            youthacksEnabled: user.youthacksEnabled || false,
+            youthacksEnabled: user.youthacksEnabled || !!user.youthacksId,
             youthacksId: user.youthacksId || null,
         };
     }
@@ -108,7 +108,7 @@ let UsersController = class UsersController {
         const user = await this.usersService.setYouthacksSettings(req.user.id, dto.enabled, dto.youthacksId);
         return {
             message: 'Youthacks OAuth settings updated',
-            youthacksEnabled: user.youthacksEnabled,
+            youthacksEnabled: user.youthacksEnabled || !!user.youthacksId,
             youthacksId: user.youthacksId,
         };
     }

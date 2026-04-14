@@ -223,7 +223,7 @@ let UsersService = class UsersService {
         if (!user) {
             throw new common_1.NotFoundException('User not found');
         }
-        user.youthacksEnabled = enabled;
+        user.youthacksEnabled = enabled || typeof youthacksId === 'string';
         if (!enabled) {
             user.youthacksId = null;
         }
