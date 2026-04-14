@@ -13,9 +13,7 @@ const Settings: React.FC = () => {
   const [oauthRedirectLoading, setOauthRedirectLoading] = useState(false);
 
   // OAuth settings
-  const [youthacksEnabled, setYouthacksEnabled] = useState(false);
   const [youthacksId, setYouthacksId] = useState<string | null>(null);
-  const [loadingOAuth, setLoadingOAuth] = useState(false);
 
   // Email change states
   const [newEmail, setNewEmail] = useState('');
@@ -89,7 +87,6 @@ const Settings: React.FC = () => {
     const fetchSettings = async () => {
       try {
         const resp = await api.get('/users/settings');
-        setYouthacksEnabled(Boolean(resp.data.youthacksEnabled || resp.data.youthacksId));
         setYouthacksId(resp.data.youthacksId || null);
       } catch (err) {
         // ignore
@@ -98,24 +95,6 @@ const Settings: React.FC = () => {
 
     fetchSettings();
   }, []);
-
-  const handleUpdateOAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoadingOAuth(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const resp = await api.post('/users/settings/youthacks', { enabled: youthacksEnabled });
-      setYouthacksEnabled(Boolean(resp.data.youthacksEnabled || resp.data.youthacksId));
-      setYouthacksId(resp.data.youthacksId || null);
-      setSuccess(resp.data.message);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update OAuth settings');
-    } finally {
-      setLoadingOAuth(false);
-    }
-  };
 
   const handleYouthacksLogin = async () => {
     setError('');
@@ -281,31 +260,20 @@ const Settings: React.FC = () => {
                 </p>
               </div>
 
-              <form onSubmit={handleUpdateOAuth}>
-                <div className="form-group">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={youthacksEnabled}
-                      onChange={(e) => setYouthacksEnabled(e.target.checked)}
-                    /> Enable Youthacks login for this account
-                  </label>
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <button type="submit" className="btn-primary" disabled={loadingOAuth}>
-                    {loadingOAuth ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={handleYouthacksLogin}
-                    disabled={oauthRedirectLoading}
-                  >
-                    {oauthRedirectLoading ? 'Redirecting...' : 'Connect Youthacks Account'}
-                  </button>
-                </div>
-              </form>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={handleYouthacksLogin}
+                  disabled={oauthRedirectLoading}
+                >
+                  {oauthRedirectLoading
+                    ? 'Redirecting...'
+                    : youthacksId
+                      ? 'Reconnect Youthacks Account'
+                      : 'Connect Youthacks Account'}
+                </button>
+              </div>
             </div>
           )}
         </div>
