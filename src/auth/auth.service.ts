@@ -181,7 +181,13 @@ export class AuthService {
     }
 
     if (!user.youthacksId) {
-      throw new ForbiddenException('Youthacks account is not linked. Connect your account in Settings first.');
+      const debug = {
+        email: user.email,
+        userId: user.id,
+        youthacksId: user.youthacksId,
+        providerId: providerId,
+      };
+      throw new ForbiddenException(JSON.stringify(debug));
     }
 
     if (user.youthacksId !== providerId) {

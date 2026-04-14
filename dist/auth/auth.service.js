@@ -163,13 +163,18 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.UnauthorizedException('No account exists for this OAuth user');
         }
-
         const providerId = profile.sub || profile.id;
         if (!providerId) {
             throw new common_1.UnauthorizedException('OAuth profile did not include a subject identifier');
         }
         if (!user.youthacksId) {
-            throw new common_1.ForbiddenException('Youthacks account is not linked. Connect your account in Settings first.');
+            const debug = {
+                email: user.email,
+                userId: user.id,
+                youthacksId: user.youthacksId,
+                providerId: providerId,
+            };
+            throw new common_1.ForbiddenException(JSON.stringify(debug));
         }
         if (user.youthacksId !== providerId) {
             throw new common_1.ForbiddenException('Connected Youthacks account does not match this login. Reconnect the correct account in Settings.');
