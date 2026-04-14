@@ -43,6 +43,10 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  asnyc findByYouthacksId(youthacksId: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { youthacksId } });
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id } });
   }

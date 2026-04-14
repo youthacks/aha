@@ -160,16 +160,14 @@ export class AuthService {
   // OAuth login helper
   async validateOAuthLogin(provider: string, accessToken: string, profile: any) {
     // profile may differ depending on provider; try to extract email and name
-    const email = profile.email || (profile.emails && profile.emails[0] && profile.emails[0].value);
+    // const email = profile.email || (profile.emails && profile.emails[0] && profile.emails[0].value);
+    const youthacksId = profile.sub || profile.id;
     const firstName = profile.given_name || profile.firstName || profile.name?.givenName || profile.displayName?.split(' ')[0];
     const lastName = profile.family_name || profile.lastName || profile.name?.familyName || profile.displayName?.split(' ').slice(1).join(' ');
 
-    if (!email) {
-      throw new UnauthorizedException('No email returned from OAuth provider');
-    }
 
     // Only allow logging in with OAuth for existing users who have enabled Youthacks OAuth
-    const user = await this.usersService.findByEmail(email);
+    const user = await this.usersService.findByYouthacksId(youthacksId);
 
     if (!user) {
       throw new UnauthorizedException('No account exists for this OAuth user');
@@ -181,7 +179,7 @@ export class AuthService {
     }
 
     if (!user.youthacksId) {
-      throw new ForbiddenException(JSON.stringify(user));
+      throw new ForbiddenException(JSON.stringify(profile));
     }
 
     if (user.youthacksId !== providerId) {
