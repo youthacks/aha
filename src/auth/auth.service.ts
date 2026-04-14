@@ -178,9 +178,6 @@ export class AuthService {
       throw new UnauthorizedException('OAuth profile did not include a subject identifier');
     }
 
-    if (!user.youthacksId) {
-      throw new ForbiddenException(JSON.stringify(profile));
-    }
 
     if (user.youthacksId !== providerId) {
       throw new ForbiddenException('Connected Youthacks account does not match this login. Reconnect the correct account in Settings.');
