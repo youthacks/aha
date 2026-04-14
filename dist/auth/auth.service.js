@@ -163,10 +163,7 @@ let AuthService = class AuthService {
         if (!user) {
             throw new common_1.UnauthorizedException('No account exists for this OAuth user');
         }
-        const youthacksAccessEnabled = user.youthacksEnabled || !!user.youthacksId;
-        if (!youthacksAccessEnabled) {
-            throw new common_1.ForbiddenException('Youthacks OAuth is not enabled for this account. Enable it in Settings first.');
-        }
+
         const providerId = profile.sub || profile.id;
         if (!providerId) {
             throw new common_1.UnauthorizedException('OAuth profile did not include a subject identifier');

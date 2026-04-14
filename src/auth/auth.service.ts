@@ -175,12 +175,6 @@ export class AuthService {
       throw new UnauthorizedException('No account exists for this OAuth user');
     }
 
-    const youthacksAccessEnabled = user.youthacksEnabled || !!user.youthacksId;
-
-    if (!youthacksAccessEnabled) {
-      throw new ForbiddenException('Youthacks OAuth is not enabled for this account. Enable it in Settings first.');
-    }
-
     const providerId = profile.sub || profile.id;
     if (!providerId) {
       throw new UnauthorizedException('OAuth profile did not include a subject identifier');
