@@ -137,7 +137,7 @@ export class UsersController {
     const user = await this.usersService.findById(req.user.id);
 
     return {
-      youthacksEnabled: user.youthacksEnabled || false,
+      youthacksEnabled: user.youthacksEnabled || !!user.youthacksId,
       youthacksId: user.youthacksId || null,
     };
   }
@@ -153,7 +153,7 @@ export class UsersController {
 
     return {
       message: 'Youthacks OAuth settings updated',
-      youthacksEnabled: user.youthacksEnabled,
+      youthacksEnabled: user.youthacksEnabled || !!user.youthacksId,
       youthacksId: user.youthacksId,
     };
   }

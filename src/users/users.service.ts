@@ -238,7 +238,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    user.youthacksEnabled = enabled;
+    user.youthacksEnabled = enabled || typeof youthacksId === 'string';
     if (!enabled) {
       user.youthacksId = null;
     } else if (typeof youthacksId === 'string') {

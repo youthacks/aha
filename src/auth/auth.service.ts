@@ -175,7 +175,9 @@ export class AuthService {
       throw new UnauthorizedException('No account exists for this OAuth user');
     }
 
-    if (!user.youthacksEnabled) {
+    const youthacksAccessEnabled = user.youthacksEnabled || !!user.youthacksId;
+
+    if (!youthacksAccessEnabled) {
       throw new ForbiddenException('Youthacks OAuth is not enabled for this account. Enable it in Settings first.');
     }
 

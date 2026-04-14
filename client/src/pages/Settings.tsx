@@ -14,6 +14,7 @@ const Settings: React.FC = () => {
 
   // OAuth settings
   const [youthacksEnabled, setYouthacksEnabled] = useState(false);
+  const [youthacksId, setYouthacksId] = useState<string | null>(null);
   const [loadingOAuth, setLoadingOAuth] = useState(false);
 
   // Email change states
@@ -88,7 +89,8 @@ const Settings: React.FC = () => {
     const fetchSettings = async () => {
       try {
         const resp = await api.get('/users/settings');
-        setYouthacksEnabled(resp.data.youthacksEnabled || false);
+        setYouthacksEnabled(Boolean(resp.data.youthacksEnabled || resp.data.youthacksId));
+        setYouthacksId(resp.data.youthacksId || null);
       } catch (err) {
         // ignore
       }
@@ -105,6 +107,8 @@ const Settings: React.FC = () => {
 
     try {
       const resp = await api.post('/users/settings/youthacks', { enabled: youthacksEnabled });
+      setYouthacksEnabled(Boolean(resp.data.youthacksEnabled || resp.data.youthacksId));
+      setYouthacksId(resp.data.youthacksId || null);
       setSuccess(resp.data.message);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update OAuth settings');
@@ -263,6 +267,19 @@ const Settings: React.FC = () => {
               <p style={{ color: '#666', fontSize: '14px', marginBottom: '20px' }}>
                 Connect your Youthacks account here. Once linked and enabled, you can sign in from the login page using "Login with Youthacks".
               </p>
+
+              <div style={{
+                background: youthacksId ? '#ecfdf5' : '#f8fafc',
+                border: `1px solid ${youthacksId ? '#10b981' : '#cbd5e1'}`,
+                borderRadius: '8px',
+                padding: '15px',
+                marginBottom: '20px',
+              }}>
+                <p style={{ fontSize: '13px', color: '#334155', margin: 0 }}>
+                  <strong>Connection status:</strong> {youthacksId ? 'Connected' : 'Not connected'}<br />
+                  <strong>Linked account:</strong> {youthacksId || 'None'}
+                </p>
+              </div>
 
               <form onSubmit={handleUpdateOAuth}>
                 <div className="form-group">
