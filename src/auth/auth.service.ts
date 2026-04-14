@@ -181,13 +181,7 @@ export class AuthService {
     }
 
     if (!user.youthacksId) {
-      const debug = {
-        email: user.email,
-        userId: user.id,
-        youthacksId: user.youthacksId,
-        providerId: providerId,
-      };
-      throw new ForbiddenException(JSON.stringify(debug));
+      throw new ForbiddenException(JSON.stringify(user));
     }
 
     if (user.youthacksId !== providerId) {
